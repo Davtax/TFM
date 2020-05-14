@@ -1,7 +1,3 @@
-from general_functions import save_data
-import os.path
+import matplotlib.pyplot as plt
 
-temp = [1, 2, 4, 5]
-file = 'temp'
-
-save_data(file, temp)
+plt.plot([1, 2, 4], [3, 5, 6])
