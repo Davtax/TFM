@@ -1,2 +1,12 @@
 
 *.xml
+*.iml
+*.pyc
+*.bib.bak
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.gz
+*.toc
