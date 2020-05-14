@@ -1,0 +1,7 @@
+\babel@toc {english}{}
+\contentsline {section}{\numberline {1}Model}{1}{section.1}%
+\contentsline {section}{\numberline {2}Double Quantum Dot}{1}{section.2}%
+\contentsline {section}{\numberline {3}Triple Quantum Dot}{3}{section.3}%
+\contentsline {section}{\numberline {4}FAQUAD}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}$T_-(1,1)\rightarrow S(1,1)$ in DQD}{7}{subsection.4.1}%
+\contentsline {section}{\numberline {A}Equivalence between SOC Models}{9}{appendix.A}%
