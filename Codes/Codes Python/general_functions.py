@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 from scipy.constants import h, e
 import os
 import telepot
-
+from scipy.signal import savgol_filter
 
 hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
 
@@ -77,7 +77,7 @@ def create_hypermatrix(parameters, hamiltonian, join=None):
 			n[join[i]] = 1  # Put the multiplicity to one
 	total = np.product(n)  # Obtain the total number of combinations of parameters we have to compute
 
-	runnings = np.zeros(len(parameters)).tolist()  # Compute a test parameter to extract the dimension of the Hamiltonian
+	runnings = range(len(parameters))  # Compute a test parameter to extract the dimension of the Hamiltonian
 	dim = np.shape(hamiltonian(*runnings))[0]
 
 	hypermatrix = np.zeros(np.append(n_wo_ones, (dim, dim)), dtype=complex).flatten()  # Hypermatrix to save the different hamiltonians
@@ -199,18 +199,32 @@ def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False
 
 
 def solve_system_unpack(pack):
-	return [pack[0], solve_system(*pack[1:], prob=True, hbar=1)[1]]
+	"""
+	This functions is used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
+	process and unpack the parameters given to solve the system. By default, the value for hbar is 1, and the absolute and relative errors are
+	10^{-8} and 10^{-6} respectively.
+	:param pack: (list) List with the following parameters: [index of the parallel computation, time, density0, parameters, hamiltonian]
+	:return: (list) list with the index of the computation al the solution of the system.
+	"""
+	# TODO: Investigate how to introduce default parameters here
+	return [pack[0], solve_system(*pack[1:], prob=True, hbar=1, atol=1e-8, rtol=1e-6)[1]]
 
 
 def sort_solution(data):
-	n = len(data)
+	"""
+	Function to sort the data obtained for a parallel computation
+	:param data: (list) List in which each entry represents one solution of the parallel computation. The elements are also list which constains in
+	the first element the index and in the second one the result of the computation.
+	:return: (list) List with the data sorted
+	"""
+	n = len(data)  # Extract the number of computation done
 
-	sorted_sol = [None] * n
+	sorted_sol = [None] * n  # Empty list with the correct number of elements
 
-	for i in range(n):
-		index = data[i][0]
-		temp = data[i][1]
-		sorted_sol[index] = temp
+	for i in range(n):  # Iterate over all the elements
+		index = data[i][0]  # Obtain the index of the result
+		temp = data[i][1]  # Obtain the result
+		sorted_sol[index] = temp  # Save the result in the correct element
 
 	return sorted_sol
 
@@ -372,7 +386,7 @@ def compute_parameters_interpolation(x_vector, factors, c_tilde, nt=1000, hbar=h
 	:return: Vector of times and the parameter
 	"""
 
-	def model(y, t):  # EDO to be solved
+	def model(y, _):  # EDO to be solved
 		return c_tilde / hbar * factor_interpolation(y)
 
 	def factor_interpolation(x):  # Interpolation for the odeint method
@@ -385,12 +399,21 @@ def compute_parameters_interpolation(x_vector, factors, c_tilde, nt=1000, hbar=h
 
 
 def save_data(name, data, overwrite=None, index=0, ask=True):
-	file_dic = 'data/' + name
+	"""
+	Function to save the data in a numpy file. All the files are saved in the folder "data", a sub-folder of "Codes Python". This function has a
+	protection for not overwriting and save a temp file if the overwriting question is not asked.
+	:param name: (str) String with the name of the file in which save the data
+	:param data: (numpy.array or list) Data to be saved
+	:param overwrite: (bool) Condition to overwrite or not the data. If a value is not given then the function will ask by default
+	:param index: (int) Index to include in the file name is the previous onw is already occupied
+	:param ask: (bool) Condition than controls if the question to overwrite is done.
+	"""
+	file_dic = 'data/' + name  # Directory in which save the data
 
-	if index != 0:
-		file_dic += ' (' + str(index) + ')'
+	if index != 0:  # If an index is specified
+		file_dic += ' (' + str(index) + ')'  # Include the index in the same
 
-	np.save(file_dic + '_temp', data)
+	np.save(file_dic + '_temp', data)  # Save a temp file to prevent an error during the question
 
 	if overwrite is None:  # If the user does not give a preference for the overwriting
 		if os.path.isfile(file_dic + '.npy'):  # If the file exists in the folder
@@ -400,16 +423,106 @@ def save_data(name, data, overwrite=None, index=0, ask=True):
 				overwrite = False
 		else:
 			overwrite = True  # If the file does not exist, them the figure will be saved
+
 	if overwrite:  # Depending on the answer of the user
 		np.save(file_dic, data)
-	else:
+	else:  # If the user does not want to over write, a copy is saved
+		# The copy will include the typical (1) at the end of the name, if this already exist then (2) without asking. If the file also exist then (3)
+		# and so on until an empty number is reached.
 		save_data(name, data, index=index + 1, ask=False)
 
-	os.remove(file_dic + '_temp.npy')
+	os.remove(file_dic + '_temp.npy')  # If the file is correctly saved the temp file is removed
 
 
 def message_telegram(text):
-	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')
-	bot.sendMessage(909417112, text)
+	"""
+	Function to write me a message in Telegram thought a bot.
+	:param text: (str) Text to write me
+	"""
+	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')  # Load my bot API
+	bot.sendMessage(909417112, text)  # Write the message
 
-	return()
+
+def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, instant_state, x_vec, y_vec, index_x, index_y, window=None, pol=3,
+                   filter_bool=False):
+	"""
+	Function to compute the limits at which some given states are populated in a given instant state. The limits will be find at the critical values
+	of x_vec, and repeated for each value in y_vec. The data obtained is then filtered to obtain a smooth result if wanted.
+	:param hamiltonian: (function) Function pointing at the hamiltonian in which we are interested
+	:param parameters: (list) List with the parameters for the hamiltonian. Those parameters that we will change can be set to 0
+	:param limit_1: (list) Limit value to obtain for the first state
+	:param limit_2: (list) Limit value to obtain for the second state
+	:param state_1: (int) Index for the first state in the Hamiltonian basis
+	:param state_2: (int) Index for the second state in the Hamiltonian basis
+	:param instant_state: (int) Index for the instantaneous state in which we are interested. These states are numerated beginning for the lest
+	energetic one
+	:param x_vec: (numpy.array) Array with the values at which we want to find the limit
+	:param y_vec: (list or numpy.array) Values for the parameters that will change. If more than one parameter is changed at the same time then they
+	must be passed as a sorted list
+	:param index_x: (ind) Index in the parameters list pointing at the parameter at which find the critical value
+	:param index_y: (ind or list) Index(s) in the parameters list pointing at the parameter(s) that changes()
+	:param window: (int) Number of points to make the filter at each step
+	:param pol: (int) Grade of the polynomial used for the filter
+	:param filter_bool: (bool) If the filter is applied to the obtained data
+	:return: (list) List with two elements, each of them is a numpy.array with the data of the limits (x_vector) in terms of the other parameter
+	(y_vector) at which the population (limit_i) is reached (state_i).
+	"""
+
+	if type(index_y) is list:  # If the y_vector point at more than one parameter
+		ny = len(y_vec[0])  # Extract the number of elements in each parameter
+		islist = True  # Save if is a list
+	else:  # If the y_vector is just one parameter
+		ny = len(y_vec)  # Extract the number of elements in the parameter
+		islist = False  # Save if is a list
+
+	# Initialize the lists in which the critical values will be saved
+	limit_1_vec = []
+	limit_2_vec = []
+
+	parameters[index_x] = x_vec  # Overwrite the data for the x_vector
+
+	for i in range(ny):  # Iterate over all the elements of y_vector
+		if islist:  # If y_vector is a list
+			for j in range(0, len(index_y)):  # Iterate over all the parameters saved in y_vector
+				parameters[index_y[j]] = y_vec[j][i]  # Save each parameter in the correct index of the list
+		else:  # If is just one parameter
+			parameters[index_y] = y_vec[i]  # Save the parameter in the correct index of the list
+		_, states = compute_eigensystem(parameters, hamiltonian)  # Extract the eigenstates in terms of x_vector
+
+		# Extract the population of each state in the instant_state in which we are interested
+		population_1 = np.abs(states[:, state_1, instant_state]) ** 2
+		population_2 = np.abs(states[:, state_2, instant_state]) ** 2
+
+		# To compute the critical value we will use just brute force, and obtain which of the computed values are closes to the desired one.
+		# Now we compute the difference to the desired limit
+		temp1 = limit_1 - population_1
+		temp2 = limit_2 - population_2
+
+		# Check if for each state the given range in x_vector obtain the limit, that is, the differences are positive and negative at some point
+		if np.any(temp1 > 0) * np.any(temp1 < 0) * np.any(temp2 > 0) * np.any(temp2 < 0):
+			# Save the index at which the closer value to the desired limit is reached
+			index1 = np.where(np.abs(temp1) == np.min(np.abs(temp1)))[0][0]
+			index2 = np.where(np.abs(temp2) == np.min(np.abs(temp2)))[0][0]
+
+			# Save the value of x_vector at which the value is obtained
+			limit_1_vec.append(x_vec[index1])
+			limit_2_vec.append(x_vec[index2])
+		else:  # If the range is not large enough
+			print('The x vector limits can not achieve the minimum value given')  # Print a message warning of the error
+			return ()  # Return nothing
+
+	# Convert the lists in arrays
+	limit_1_vec = np.array(limit_1_vec)
+	limit_2_vec = np.array(limit_2_vec)
+
+	if filter_bool:  # If the user wants to apply the filter
+		if window is None:  # If a window is not given
+			window = np.int(len(x_vec) / 10)  # Compute a window more or less wise
+			if not window % 2:  # If the window is even
+				window -= 1  # Change its value to make it odd
+
+		# Compute the Savitzky–Golay filter
+		limit_1_vec = savgol_filter(limit_1_vec, window, pol)
+		limit_2_vec = savgol_filter(limit_2_vec, window, pol)
+
+	return limit_1_vec, limit_2_vec
