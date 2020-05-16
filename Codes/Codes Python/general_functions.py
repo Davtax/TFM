@@ -394,7 +394,7 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 	:return: Vector of times and the parameter
 	"""
 
-	if nt is None:  # If the number of elements for the time is not giben
+	if nt is None:  # If the number of elements for the time is not given
 		nt = len(x_vec)  # The number of elements is the total number of x_vec
 
 	def factor_interpolation(x):  # Interpolation for the odeint method
@@ -468,6 +468,16 @@ def message_telegram(text):
 	"""
 	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')  # Load my bot API
 	bot.sendMessage(909417112, text)  # Write the message
+
+
+def image_telegram(file_path):
+	"""
+	Function to send me a image in Telegram thought a bot.
+	:param file_path: (str) Path to the image that the used wants to send
+	"""
+	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')  # Load my bot API
+	image = open(file_path, 'rb')
+	bot.sendMessage(909417112, image)  # Write the message
 
 
 def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, instant_state, x_vec, y_vec, index_x, index_y, window=None, pol=3,
@@ -555,3 +565,45 @@ def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, 
 		limit_2_vec = savgol_filter(limit_2_vec, window, pol)
 
 	return limit_1_vec, limit_2_vec
+
+
+# TODO: The value for the period is not good, revisit the function to fix it
+def compute_period(x_sol, hamiltonian, parameters, hbar, index):
+	"""
+	Compute the characteristic period of the FAQUAD protocol
+	:param x_sol: (list, scipy.interpolated) List with all the interpolated functions representing the independent variables
+	:param hamiltonian: (function) Function pointing to the Hamiltonian in which are interested
+	:param parameters: (list) List with the parameters of the system. The elements of the parameters that run can be set to 0
+	:param hbar: (float) Value for the reduced Plank's constant
+	:param index: (list) List of the index in the list parameters of the variables in x_sol
+	:return: (float) Value for the period of the FAQUAD protocol.
+	"""
+	s = np.linspace(0, 1, 2 ** 15 + 1)  # Compute the s parameter with the correct number of element for doing the romb algorithm for the integral
+	ns = len(s)  # Number of element in s
+
+	x_sol_list = []  # Empty list to save the independent variables
+	if type(x_sol) is list:  # If there are more than one independent variable
+		for i in range(0, len(x_sol)):  # Iterate over all the variables
+			x_sol_list.append(x_sol(s))  # Save all the variables in a list
+	else:  # If there is only one independent variable
+		x_sol_list = [x_sol(s)]  # Save the variable in a list
+		index = [index]  # Make the index a list with only one element
+
+	for i in range(0, len(index)):  # Iterate over all the independent variables to include in the list of parameters
+		parameters[index[i]] = x_sol_list[i]  # Include the vec of independent variables
+
+	# TODO: For the moment we can only have one independent variable
+	h_matrix = create_hypermatrix(parameters, hamiltonian)  # Construct the hypermatrix of the hamiltonian
+	energies = np.linalg.eigvalsh(h_matrix)  # Extract only the instant eigenenergies of the Hamiltonian
+
+	n = np.shape(energies)[1]  # Extract the dimension of the Hamiltonian
+
+	e_g = np.zeros([n - 1, ns])  # Array in which rows will be saved the gaps between the energies
+	for i in range(0, n - 1):  # Iterate over all the gaps
+		e_g[i, :] = np.abs(energies[:, i] - energies[:, i + 1])  # Compute the gaps, always a positive value
+
+	phi = hbar * romb(np.sum(e_g, axis=0), dx=(s[1] - s[0]))  # Compute the integral of the gaps
+
+	t = 2 * np.pi / phi  # Compute the period
+
+	return t
