@@ -1,14 +1,37 @@
 import numpy as np
 from hamiltonians import hamiltonian_2QD_1HH_Lowest
 from general_functions import (solve_system_unpack, sort_solution, save_data, message_telegram, compute_adiabatic_parameter,
-	compute_parameters_interpolation, compute_eigensystem)
+	compute_parameters_interpolation, compute_eigensystem, compute_limits)
 import concurrent.futures
 import matplotlib.pyplot as plt
 from progress.bar import IncrementalBar as Bar
 from plotting_functions import save_figure
-from scipy.interpolate import interp1d
+import time as timer
+from scipy.constants import h, e
 
-hbar = 6.582 * 10 ** (-1)  # Hbar (ueV*ns)
+workers = 8
+
+
+def compute_parameters(index_parallel):
+	counter = n_tf * index_parallel
+	eps_vector_temp = np.linspace(lim_T[index_parallel], lim_S[index_parallel], 2 ** 15 + 1)
+	parameters_temp = [eps_vector_temp, u, ET, tau_vec[index_parallel], l1_vector[index_parallel], l2_vector[index_parallel]]
+	energies, states = compute_eigensystem(parameters_temp, hamiltonian_2QD_1HH_Lowest)
+	factors, c_tilde = compute_adiabatic_parameter(eps_vector_temp, states, energies, initial_state=1)
+	s, eps_sol = compute_parameters_interpolation(eps_vector_temp, factors, c_tilde)
+
+	parameters_temp[0] = eps_sol
+
+	args_parallel = []
+	for k in range(n_tf):
+		time = np.arange(0, tf_vec[k], time_step)
+		args_parallel.append([counter, time, density0, parameters_temp, hamiltonian_2QD_1HH_Lowest])
+		args_parallel[-1].append({'normalization': tf_vec[k], 'atol': 1e-8, 'rtol': 1e-6, 'hbar': hbar_muev_ns})
+		counter += 1
+	return [index_parallel, args_parallel]
+
+
+hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
 g = 1.35  # g-factor fo the GaAs
 muB = 57.883  # Bohr magneton (ueV/T)
 B = 0.015  # Magnetic field applied (T)
@@ -17,36 +40,100 @@ u = 2000  # Intradot interaction (ueV)
 
 time_step = 1e-3
 
-N = 2 ** 15 + 1
-limit = 50
-eps_vector = np.linspace(-limit, limit, N) * ET - u
+n_eps = 10
+limit = 200
+eps_vector = np.linspace(-limit, limit, n_eps) * ET - u
 
-n_tau = 10
-n_tf = 10
-tau_vec = np.linspace(0.1, 5, n_tau)
+n_tau = 1
+n_tf = 100
+tau_vec = np.linspace(0.1, 6, n_tau)
+
 tf_vec = np.linspace(0.1, 100, n_tf)
 
 l2_vector = tau_vec * 0.4
 l1_vector = l2_vector / 100
 
+parameters = [0, u, ET, 0, 0, 0]
+limit1 = 0.99
+limit2 = 0.99
+
+state_1 = 0
+state_2 = 1
+adiabatic_state = 1
+
 density0 = np.zeros([3, 3], dtype=complex)  # Initialize the variable to save the density matrix
 density0[0, 0] = 1  # Initially the only state populated is the triplet (in our basis the first state)
 
-args = []
-counter = 0
-for i in range(n_tau):
-	parameters = [eps_vector, u, ET, tau_vec[i], l1_vector[i], l2_vector[i]]
+lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters, limit1, limit2, state_1, state_2, adiabatic_state, eps_vector,
+                              [tau_vec, l1_vector, l2_vector], 0, [3, 4, 5], filter_bool=False)
 
-	energies, states = compute_eigensystem(parameters, hamiltonian_2QD_1HH_Lowest)
+if __name__ == '__main__':
+	bar = Bar('Processing', max=n_tau, suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
 
-	factors, c_tilde = compute_adiabatic_parameter(eps_vector, states, energies, initial_state=1)
+	results_list = []
 
-	s, eps_sol = compute_parameters_interpolation(eps_vector, factors, c_tilde)
-	index_max = np.where((eps_sol + u) / ET > limit)[0][0]
-	s_mod = np.linspace(0, 1, index_max + 1)
-	eps_sol = interp1d(s_mod, eps_sol[:index_max + 1], kind='quadratic')
+	with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+		results = executor.map(compute_parameters, np.arange(0, n_tau))
 
-	for j in range(n_tf):
-		time = np.arange(0, tf_vec[i], time_step)
-		args.append([counter, time, density0, parameters, hamiltonian_2QD_1HH_Lowest])
-		counter += 1
+		for result in results:
+			results_list.append(result)
+			bar.next()
+
+	args_temp = sort_solution(results_list)
+
+	args = []
+	for i in args_temp:
+		for j in i:
+			args.append(j)
+
+
+	print('\nParameters computed')
+
+	results_list = []
+
+	bar = Bar('Processing', max=n_tf * n_tau, suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
+
+	start = timer.perf_counter()
+
+	with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+		results = executor.map(solve_system_unpack, args)
+
+		for result in results:
+			results_list.append(result)
+			bar.next()
+
+	bar.finish()
+
+	finish = timer.perf_counter()
+
+	results = sort_solution(results_list)
+
+	population_middle = np.zeros([n_tf, n_tau])
+	fidelity = np.zeros([n_tf, n_tau])
+
+	for i in range(0, n_tf):
+		for j in range(0, n_tau):
+			index = i * n_tau + j
+			temp = results[index]
+			population_middle[i, j] = np.max(temp[:, 2])
+			fidelity[i, j] = temp[-1, 1]
+
+	fig, ax = plt.subplots()
+	pos = ax.imshow(fidelity.transpose(), cmap='jet', aspect='auto', extent=[tau_vec[0], tau_vec[-1], tf_vec[0], tf_vec[-1]])
+	cbar = fig.colorbar(pos, ax=ax)
+
+	total_time = finish - start
+
+	if total_time > 60 * 60:
+		units = '(hr)'
+		total_time /= (60 * 60)
+	elif total_time > 60:
+		units = '(min)'
+		total_time /= 60
+	else:
+		units = ' (s)'
+
+	file_name = 'STA_DQD_2HH_Test'
+	message_telegram('DONETE: {} {}x{}. Total time: {:.2f} {}'.format(file_name, n_tau, n_tf, total_time, units))
+	save_figure(fig, file_name, overwrite=True, extension='png', dic='data/')
+	save_data(file_name, [results, population_middle, fidelity, tau_vec, tf_vec, ['results', 'population_middle', 'tau_vec', 'tf_vec']])
