@@ -71,15 +71,16 @@ for e13 in detunning13:
 	for e2 in detunning2:
 		parameters = [-e13, e2, e13, 0, Omega12_tilde_SA, Omega23_tilde_SA, Omega12f_tilde_SA, Omega23f_tilde_SA]
 		args.append([i, time, density0, parameters, hamiltonian_3QD_1HH])
+		args.append({'hbar': 1})
 		i += 1
 
 result_list = []
 
-bar = Bar('Processing', max=len(detunning13) * len(detunning2), suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
-
-start = timer.perf_counter()
-
 if __name__ == '__main__':
+	bar = Bar('Processing', max=len(detunning13) * len(detunning2), suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
+
+	start = timer.perf_counter()
+
 	with concurrent.futures.ProcessPoolExecutor() as executor:
 		results = executor.map(solve_system_unpack, args)
 
