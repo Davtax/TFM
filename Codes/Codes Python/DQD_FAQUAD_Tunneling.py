@@ -44,11 +44,11 @@ n_eps = 10
 limit = 200
 eps_vector = np.linspace(-limit, limit, n_eps) * ET - u
 
-n_tau = 1
-n_tf = 100
-tau_vec = np.linspace(0.1, 6, n_tau)
+n_tau = 2
+n_tf = 1000
+tau_vec = np.linspace(0.1, 5, n_tau)
 
-tf_vec = np.linspace(0.1, 100, n_tf)
+tf_vec = np.linspace(0.1, 50, n_tf)
 
 l2_vector = tau_vec * 0.4
 l1_vector = l2_vector / 100
@@ -86,7 +86,6 @@ if __name__ == '__main__':
 		for j in i:
 			args.append(j)
 
-
 	print('\nParameters computed')
 
 	results_list = []
@@ -108,18 +107,18 @@ if __name__ == '__main__':
 
 	results = sort_solution(results_list)
 
-	population_middle = np.zeros([n_tf, n_tau])
-	fidelity = np.zeros([n_tf, n_tau])
+	population_middle = np.zeros([n_tau, n_tf])
+	fidelity = np.zeros([n_tau, n_tf])
 
-	for i in range(0, n_tf):
-		for j in range(0, n_tau):
-			index = i * n_tau + j
+	for i in range(0, n_tau):
+		for j in range(0, n_tf):
+			index = i * n_tf + j
 			temp = results[index]
 			population_middle[i, j] = np.max(temp[:, 2])
 			fidelity[i, j] = temp[-1, 1]
 
 	fig, ax = plt.subplots()
-	pos = ax.imshow(fidelity.transpose(), cmap='jet', aspect='auto', extent=[tau_vec[0], tau_vec[-1], tf_vec[0], tf_vec[-1]])
+	pos = ax.imshow(fidelity.transpose(), origin='lower', cmap='jet', aspect='auto', extent=[tau_vec[0], tau_vec[-1], tf_vec[0], tf_vec[-1]])
 	cbar = fig.colorbar(pos, ax=ax)
 
 	total_time = finish - start
@@ -136,4 +135,4 @@ if __name__ == '__main__':
 	file_name = 'STA_DQD_2HH_Test'
 	message_telegram('DONETE: {} {}x{}. Total time: {:.2f} {}'.format(file_name, n_tau, n_tf, total_time, units))
 	save_figure(fig, file_name, overwrite=True, extension='png', dic='data/')
-	save_data(file_name, [results, population_middle, fidelity, tau_vec, tf_vec, ['results', 'population_middle', 'tau_vec', 'tf_vec']])
+	save_data(file_name, [results, tau_vec, tf_vec, ['results', 'tau_vec', 'tf_vec']])
