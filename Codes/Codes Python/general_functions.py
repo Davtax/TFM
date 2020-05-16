@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 from scipy.constants import h, e
 import os
 import telepot
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, medfilt
 
 hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
 
@@ -207,7 +207,11 @@ def solve_system_unpack(pack):
 	:return: (list) list with the index of the computation al the solution of the system.
 	"""
 	# TODO: Investigate how to introduce default parameters here
-	return [pack[0], solve_system(*pack[1:], prob=True, hbar=1, atol=1e-8, rtol=1e-6)[1]]
+	if len(pack) > 5:
+		extra_param = pack[-1]
+	else:
+		extra_param = {}
+	return [pack[0], solve_system(*pack[1:-1], prob=True, **extra_param)[1]]
 
 
 def sort_solution(data):
@@ -358,16 +362,19 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 
 	for i in range(0, dim):  # Iterate over all the states
 		for j in range(0, dim):  # Iterate over all the coordinates
-			derivatives[:, i, j] = np.gradient(states[:, i, j], x_vec)  # Compute the numerical derivative
+			derivatives[:, j, i] = np.gradient(states[:, j, i], x_vec)  # Compute the numerical derivative
 
-	counter = 0  # Temp variable to save the numbers of factors computed
+	counter = 0  # Temp variable to save the number of factors computed
 	factors = np.zeros([n, dim - 1])  # Matrix to save the factors
 	for i in range(0, dim):  # Iterate over all the states
 		if i != initial_state:  # If the state is not the initial one
 			# Compute the factor, this includes a scalar product
-			factors[:, counter] = np.abs(np.sum(np.conjugate(states[:, initial_state, :]) * derivatives[:, i, :], axis=1) / (
-					energies[:, initial_state] - energies[:, i] + 10 ** (-16)))
+			factors[:, counter] = np.abs(
+				np.sum(np.conjugate(states[:, :, initial_state]) * derivatives[:, :, i], axis=1) / (energies[:, initial_state] - energies[:, i]))
 			counter += 1
+
+	for i in range(0, 2):
+		factors[:, i] = medfilt(factors[:, i], 5)
 
 	# Compute the c_tilda factor, that include a summation over all the states and an integration
 	c_tilde = hbar * np.sum(romb(factors, dx=np.abs(x_vec[0] - x_vec[1]), axis=0))
@@ -375,10 +382,10 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 	return factors, c_tilde
 
 
-def compute_parameters_interpolation(x_vector, factors, c_tilde, nt=1000, hbar=hbar_muev_ns):
+def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar_muev_ns):
 	"""
-	Function to solve the ODE which gives the result for the parameters in terms of hte adimensional variable s=[0,1] for the FAQUAD protocol
-	:param x_vector: (numpy.array) Vector with the values of the independent variable
+	Function to solve the ODE which gives the result for the parameters in terms of the adimensional variable s=[0,1] for the FAQUAD protocol
+	:param x_vec: (numpy.array) Vector with the values of the independent variable
 	:param factors: (numpy.matrix) Matrix with the factors of the FAQUAD protocol
 	:param c_tilde: (float) Value for the rescaled adiabatic parameter
 	:param nt: Number of steps for the time variable
@@ -386,14 +393,32 @@ def compute_parameters_interpolation(x_vector, factors, c_tilde, nt=1000, hbar=h
 	:return: Vector of times and the parameter
 	"""
 
+	if nt is None:  # If the number of elements for the time is not giben
+		nt = len(x_vec)  # The number of elements is the total number of x_vec
+
+	def factor_interpolation(x):  # Interpolation for the odeint method
+		return interp1d(x_vec, 1 / np.sum(factors, axis=1), kind='quadratic', fill_value="extrapolate")(x)
+
 	def model(y, _):  # EDO to be solved
 		return c_tilde / hbar * factor_interpolation(y)
 
-	def factor_interpolation(x):  # Interpolation for the odeint method
-		return interp1d(x_vector, 1 / np.sum(factors, axis=1), kind='quadratic', fill_value="extrapolate")(x)
+	# Rescaled time parameter s=t/tF, the end point is a bit larger than 1 since there are numerical errors, and the desired final x_vec is not
+	# reached exactly at s=1
+	s = np.linspace(0, 1.01, nt, endpoint=True)
 
-	s = np.linspace(0, 1, nt, endpoint=True)  # Rescaled time parameter s=t/tF
-	x_sol = odeint(model, x_vector[0], s)[:, 0]  # Solve numerically the values of the parameter in terms of s
+	reached = False  # Variable that controls if the final value of x_vec is reached
+	while not reached:  # While the final value is not reached
+		x_sol = odeint(model, x_vec[0], s)[:, 0]  # Solve numerically the values of the parameter in terms of s
+
+		if np.any(x_sol > x_vec[-1]):  # If the final value is reached
+			index_max = np.where(x_sol > x_vec[-1])[0][0]  # Save the first index in which the final value is obtained
+			reached = True  # Exit the while loop
+		else:  # If the final value is not yet reached
+			s *= 1.1  # Increase the values for s to give more time to reach the value
+			reached = False  # Continue in the loop (this line is not necessary since the variable is still = False
+
+	s = np.linspace(0, 1, index_max + 1)  # Compute a new vector that goes exactly up to thje unity
+	x_sol = interp1d(s, x_sol[:index_max + 1], kind='quadratic')  # Interpolate and contract the data to reach the final value at s=1
 
 	return s, x_sol
 
@@ -520,6 +545,8 @@ def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, 
 			window = np.int(len(x_vec) / 10)  # Compute a window more or less wise
 			if not window % 2:  # If the window is even
 				window -= 1  # Change its value to make it odd
+		if pol > window:  # If the polynomial order is larger than the window
+			pol = 2
 
 		# Compute the Savitzky–Golay filter
 		limit_1_vec = savgol_filter(limit_1_vec, window, pol)
