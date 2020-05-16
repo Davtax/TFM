@@ -200,13 +200,14 @@ def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False
 
 def solve_system_unpack(pack):
 	"""
-	This functions is used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
+	These functions are used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
 	process and unpack the parameters given to solve the system. By default, the value for hbar is 1, and the absolute and relative errors are
 	10^{-8} and 10^{-6} respectively.
-	:param pack: (list) List with the following parameters: [index of the parallel computation, time, density0, parameters, hamiltonian]
+	:param pack: (list) List with the following parameters: [index of the parallel computation, time, density0, parameters, hamiltonian]. To pass the
+	values of default parameters, all of them must be in the sixth element of the list as a dictionary, e.g {'hbar': 1, 'atol': 1e-8}.
 	:return: (list) list with the index of the computation al the solution of the system.
 	"""
-	# TODO: Investigate how to introduce default parameters here
+
 	if len(pack) > 5:
 		extra_param = pack[-1]
 	else:
@@ -217,7 +218,7 @@ def solve_system_unpack(pack):
 def sort_solution(data):
 	"""
 	Function to sort the data obtained for a parallel computation
-	:param data: (list) List in which each entry represents one solution of the parallel computation. The elements are also list which constains in
+	:param data: (list) List in which each entry represents one solution of the parallel computation. The elements are also list which contains in
 	the first element the index and in the second one the result of the computation.
 	:return: (list) List with the data sorted
 	"""
@@ -417,8 +418,9 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 			s *= 1.1  # Increase the values for s to give more time to reach the value
 			reached = False  # Continue in the loop (this line is not necessary since the variable is still = False
 
-	s = np.linspace(0, 1, index_max + 1)  # Compute a new vector that goes exactly up to thje unity
+	s = np.linspace(0, 1, index_max + 1)  # Compute a new vector that goes exactly up to the unity
 	x_sol = interp1d(s, x_sol[:index_max + 1], kind='quadratic')  # Interpolate and contract the data to reach the final value at s=1
+	# We must use index_max + 1 in order to get also the value that fulfill the condition x_vex > limit
 
 	return s, x_sol
 
