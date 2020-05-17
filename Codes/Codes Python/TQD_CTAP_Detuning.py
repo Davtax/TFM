@@ -1,6 +1,7 @@
 import numpy as np
 from hamiltonians import hamiltonian_3QD_1HH
-from general_functions import solve_system_unpack, sort_solution, save_data, message_telegram
+from general_functions import solve_system_unpack, sort_solution, save_data
+from telegram_bot import message_telegram
 from scipy.constants import h, e
 from scipy.misc import derivative
 import concurrent.futures
