@@ -8,7 +8,6 @@ from scipy.integrate import romb, odeint
 from scipy.interpolate import interp1d
 from scipy.constants import h, e
 import os
-import telepot
 from scipy.signal import savgol_filter, medfilt
 
 hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
@@ -16,20 +15,20 @@ hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the redu
 
 def question_overwrite(name):
 	"""
-	Make a question if you want to overwrite a certain file that already exist in the directory. There is only two possible answers y -> yes (true) or
+	Make a question if you want to overwrite a certain file that already exists in the directory. There is only two possible answers y -> yes (true) or
 	n -> no (False). If the answer is non of this two the question is repeated until a good answer is given.
 	:param name: (Str) Name of the file to overwrite
 	:return: (Bool) Answer given by the user
 	"""
 
-	temp = input('Do you want to overwrite the file ({})?  [y]/n'.format(name))  # Ask for and answer by keyword input
+	temp = input('Do you want to overwrite the file ({})?  [y]/n: '.format(name))  # Ask for an answer by keyword input
 
 	if temp == 'y' or temp == '':
 		return True
 	elif temp == 'n':
 		return False
 	else:  # If the answer is not correct
-		print('I didnt understand your answer.')
+		print('I didn\'t understand your answer.')
 		return question_overwrite(name)  # The function will repeat until a correct answer if provided
 
 
@@ -459,25 +458,6 @@ def save_data(name, data, overwrite=None, index=0, ask=True):
 		save_data(name, data, index=index + 1, ask=False)
 
 	os.remove(file_dic + '_temp.npy')  # If the file is correctly saved the temp file is removed
-
-
-def message_telegram(text):
-	"""
-	Function to write me a message in Telegram thought a bot.
-	:param text: (str) Text to write me
-	"""
-	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')  # Load my bot API
-	bot.sendMessage(909417112, text)  # Write the message
-
-
-def image_telegram(file_path):
-	"""
-	Function to send me a image in Telegram thought a bot.
-	:param file_path: (str) Path to the image that the used wants to send
-	"""
-	bot = telepot.Bot('990722479:AAFes17zw8t4S9oSH8-2B_W4StoODQBxnlU')  # Load my bot API
-	image = open(file_path, 'rb')
-	bot.sendMessage(909417112, image)  # Write the message
 
 
 def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, instant_state, x_vec, y_vec, index_x, index_y, window=None, pol=3,

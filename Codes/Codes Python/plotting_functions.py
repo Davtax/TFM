@@ -6,36 +6,19 @@ from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from general_functions import question_overwrite
 
 
-def file_location(device):
-	"""
-	Give the location for the images used in the LaTeX file depending on which device we are working. The only possible devices is laptop or desktop.
-	If non of these values is given to the function then it will ask for a correct device.
-	:param device: (Str) Name of the device that we are using
-	:return: (Str) Directory to the file of images used in the given device
-	"""
-
-	if device == 'laptop':
-		return 'C:\\Users\\David\\OneDrive - Universidad Autonoma de Madrid\\Universidad\\Master\\TFM\\Notes\\LaTeX\\images\\'
-	if device == 'desktop':
-		return 'D:\\OneDrive - Universidad Autonoma de Madrid\\Universidad\\Master\\TFM\\Notes\\LaTeX\\images\\'
-	else:  # If the device given is not correct
-		temp = input('Please enter a correct device: laptop or desktop')  # The function will ask a device name by keyword input
-		return file_location(temp)  # The function is repeated with the given input given to check the validity of the new answer
-
-
-def save_figure(fig, name, device=None, overwrite=None, extension='eps', dic=None):
+def save_figure(fig, name, overwrite=None, extension='eps', dic=None):
 	"""
 	Function to save a given figure. We must introduce the name with which we want to save the file, and the device in which we are working. If the
 	file already exist them we will be asked if we want to overwrite it. We can also change the extension used to save the image.
 	:param fig: (matplotlib.fig object) Figure that we want to save in the device
 	:param name: (Str) Name for the file
-	:param device: (Str) Device in which we are working. By default, an empty string is given we are going to be asked to introduce the device
 	:param overwrite: (Bool) Overwrite the file if it already exists. By default, the value is True, but if the file exists the value will be asked
 	:param extension: (Str) Extension used to save the figure.
+	:param dic: (str) Directory of the folder in with save teh image. If no value is given, the default is TMF/Notes/LaTeX/images.
 	"""
 
 	if dic is None:
-		dic = file_location(device)  # We obtain the direction of the folder depending on which device we are working
+		dic = '../../Notes/LaTeX/images/'  # We obtain the direction of the folder depending on which device we are working
 
 	file_dic = dic + name + '.' + extension  # Complete the directory of the file including its extension
 	file_dic_copy = dic + name + '.' + 'png'  # Complete the directory of the copy file in .png

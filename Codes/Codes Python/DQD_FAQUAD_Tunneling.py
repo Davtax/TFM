@@ -1,7 +1,8 @@
 import numpy as np
 from hamiltonians import hamiltonian_2QD_1HH_Lowest
-from general_functions import (solve_system_unpack, sort_solution, save_data, message_telegram, compute_adiabatic_parameter,
-	compute_parameters_interpolation, compute_eigensystem, compute_limits)
+from general_functions import (solve_system_unpack, sort_solution, save_data, compute_adiabatic_parameter, compute_parameters_interpolation,
+	compute_eigensystem, compute_limits)
+from telegram_bot import message_telegram, image_telegram
 import concurrent.futures
 import matplotlib.pyplot as plt
 from progress.bar import IncrementalBar as Bar
@@ -12,16 +13,15 @@ from scipy.constants import h, e
 workers = 8
 
 
-def compute_parameters(index_parallel):
+def compute_parameters(pack):
+	index_parallel, limit_lower, limit_upper = pack
 	counter = n_tf * index_parallel
-	eps_vector_temp = np.linspace(lim_T[index_parallel], lim_S[index_parallel], 2 ** 15 + 1)
+	eps_vector_temp = np.linspace(limit_lower[index_parallel], limit_upper[index_parallel], 2 ** 15 + 1)
 	parameters_temp = [eps_vector_temp, u, ET, tau_vec[index_parallel], l1_vector[index_parallel], l2_vector[index_parallel]]
 	energies, states = compute_eigensystem(parameters_temp, hamiltonian_2QD_1HH_Lowest)
 	factors, c_tilde = compute_adiabatic_parameter(eps_vector_temp, states, energies, initial_state=1)
 	s, eps_sol = compute_parameters_interpolation(eps_vector_temp, factors, c_tilde)
-
 	parameters_temp[0] = eps_sol
-
 	args_parallel = []
 	for k in range(n_tf):
 		time = np.arange(0, tf_vec[k], time_step)
@@ -40,23 +40,22 @@ u = 2000  # Intradot interaction (ueV)
 
 time_step = 1e-3
 
-n_eps = 10
+n_eps = 10000
 limit = 200
 eps_vector = np.linspace(-limit, limit, n_eps) * ET - u
 
-n_tau = 2
-n_tf = 1000
+n_tau = 1
 tau_vec = np.linspace(0.1, 5, n_tau)
-
+n_tf = 1000
 tf_vec = np.linspace(0.1, 50, n_tf)
 
 l2_vector = tau_vec * 0.4
 l1_vector = l2_vector / 100
 
 parameters = [0, u, ET, 0, 0, 0]
+
 limit1 = 0.99
 limit2 = 0.99
-
 state_1 = 0
 state_2 = 1
 adiabatic_state = 1
@@ -64,16 +63,22 @@ adiabatic_state = 1
 density0 = np.zeros([3, 3], dtype=complex)  # Initialize the variable to save the density matrix
 density0[0, 0] = 1  # Initially the only state populated is the triplet (in our basis the first state)
 
-lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters, limit1, limit2, state_1, state_2, adiabatic_state, eps_vector,
-                              [tau_vec, l1_vector, l2_vector], 0, [3, 4, 5], filter_bool=False)
-
 if __name__ == '__main__':
+	start = timer.perf_counter()
+	lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters, limit1, limit2, state_1, state_2, adiabatic_state, eps_vector,
+	                              [tau_vec, l1_vector, l2_vector], 0, [3, 4, 5], filter_bool=False, window=51)
+	print(timer.perf_counter() - start)
+
 	bar = Bar('Processing', max=n_tau, suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
 
 	results_list = []
 
+	args = []
+	for i in range(n_tau):
+		args.append([i, lim_T, lim_S])
+
 	with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-		results = executor.map(compute_parameters, np.arange(0, n_tau))
+		results = executor.map(compute_parameters, args)
 
 		for result in results:
 			results_list.append(result)
@@ -135,4 +140,5 @@ if __name__ == '__main__':
 	file_name = 'STA_DQD_2HH_Test'
 	message_telegram('DONETE: {} {}x{}. Total time: {:.2f} {}'.format(file_name, n_tau, n_tf, total_time, units))
 	save_figure(fig, file_name, overwrite=True, extension='png', dic='data/')
+	image_telegram('data/' + file_name + '.png')
 	save_data(file_name, [results, tau_vec, tf_vec, ['results', 'tau_vec', 'tf_vec']])

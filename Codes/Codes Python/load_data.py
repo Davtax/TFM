@@ -30,5 +30,5 @@ for i in range(0, n_tau):
 		fidelity[i, j] = temp[-1, 1]
 
 fig, ax = plt.subplots()
-pos = ax.imshow(population_middle.transpose(), origin='lower', cmap='jet', aspect='auto', extent=[tau_vec[0], tau_vec[-1], tf_vec[0], tf_vec[-1]])
+pos = ax.imshow(fidelity.transpose(), origin='lower', cmap='jet', aspect='auto', extent=[tau_vec[0], tau_vec[-1], tf_vec[0], tf_vec[-1]])
 cbar = fig.colorbar(pos, ax=ax)
