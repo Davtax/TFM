@@ -84,6 +84,7 @@ if __name__ == '__main__':
 		for result in results:
 			results_list.append(result)
 			pbar.update()
+	pbar.refresh()
 
 	args_temp = sort_solution(results_list)
 
@@ -106,6 +107,7 @@ if __name__ == '__main__':
 		for result in results:
 			results_list.append(result)
 			pbar.update()
+	pbar.refresh()
 
 	finish = timer.perf_counter()
 

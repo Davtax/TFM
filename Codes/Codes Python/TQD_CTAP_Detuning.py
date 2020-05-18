@@ -89,6 +89,7 @@ if __name__ == '__main__':
 		for result in results:
 			result_list.append(result)
 			pbar.update()
+	pbar.refresh()
 
 	finish = timer.perf_counter()
 
