@@ -110,7 +110,7 @@ There exist some quasi adiabatic techniques that take advantage of the existence
 	\label{fig:occupation_middle_state}
 \end{figure}
 
-To study the dependency with the tunnelling we have assumed that both the spin-flip and spin-conserving rates are proportional to each other $\lambda_i\propto \tau$, specifically we have used $\lambda_2=0.25\tau$ and $\lambda_1=\lambda_2/100$. If we want to make a transition between the lowest energy triplet and the single occupation singlet we must go from $(\varepsilon(t_0)+u)/E_Z=-4$ to $(\varepsilon(t_f)+u)/E_Z=$, this means that there is no dark state that does not populate the $\ket{S(0,2)}$ in the range of detuning in which we are interest unless the tunnelling parameters are high enough. This is why we will try to apply the FAst QUasi ADiabatic (FAQUAD) protocol in Sec.~\ref{Subsec:FAQUAD_DQD}.
+To study the dependency with the tunnelling we have assumed that both the spin-flip and spin-conserving rates are proportional to each other $\lambda_i\propto \tau$, specifically we have used $\lambda_2=0.25\tau$ and $\lambda_1=\lambda_2/100$. If we want to make a transition between the lowest energy triplet and the single occupation singlet we must go from $(\varepsilon(t_0)+u)/E_Z=-4$ to $(\varepsilon(t_f)+u)/E_Z=$, this means that there is no dark state that does not populate the $\ket{S(0,2)}$ in the range of detuning in which we are interest unless the tunnelling parameters are high enough. This is why we will try to apply the FAst QUasi ADiabatic (FAQUAD) protocol in the next section.
 
 \section{FAQUAD}
 The standard adiabaticity parameter is imposed to be constant, as
@@ -123,12 +123,12 @@ This is only the case in which there are two states. If we a multilevel system t
 \end{equation}
 where the index $i$ denote the state in which we initialize the system, in our case it will be $\ket{\phi_i(t)}=\ket{T_-(1,1)}$. Using the chain rule we can write $\partial_t=\partial_\varepsilon \dot{\varepsilon}$ and the adiabatic condition is then
 \begin{equation}
-	\dot{\varepsilon}=\frac{c}{\hbar}\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_t\phi_k(t)}}{E_i(t)-E_k(t)}}\right)^{-1}\; .
+	\dot{\varepsilon}=\frac{c}{\hbar}\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_\varepsilon\phi_k(t)}}{E_i(t)-E_k(t)}}\right)^{-1}\; .
 	\label{eq:detuning_EDO}
 \end{equation}
 We can rescale the total operation time $t_f$ to $s\equiv t/t_f$ and define $\tilde{c}\equiv ct_f$, allowing us to write
 \begin{equation}
-	\tilde{c}=\int_{\varepsilon(0)}^{\varepsilon(t_f)}d\varepsilon\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_t\phi_k(t)}}{E_i(t)-E_k(t)}}\right)\; , 
+	\tilde{c}=\int_{\varepsilon(0)}^{\varepsilon(t_f)}d\varepsilon\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_\varepsilon\phi_k(t)}}{E_i(t)-E_k(t)}}\right)\; , 
 \end{equation}
 what can be easily computed numerically, obtaining a value of $\tilde{c}=3.79$ ns, so with typical times of $t_f\sim 10$ ns the adiabaticity parameter obtained is $c\sim 0.4< 1$ fulfilling the adiabatic condition. Once we have obtained the value for this parameters, which will remain constant, we can numerically solve the EDO for the evolution of the detuning Eq.~(\ref{eq:detuning_EDO}). The result is shown in Fig.~\ref{fig:FAQUAD_detuning_2QD_2HH}, the dependency of this parameter with $s=t/t_f$ is plotted in a), while the derivative is represented in b) in terms of the detuning. We observe that when we reach the two avoided crossings the rate of change in the detuning decreases significantly, allowing an adiabatic passage, while in the rest of the point the velocity increases in order to speed up the transfer process.
 \begin{figure}[!htbp]
@@ -137,7 +137,7 @@ what can be easily computed numerically, obtaining a value of $\tilde{c}=3.79$ n
 	\caption{Result obtained for the detuning after applying the FAQUAD protocol to the system of DQD populated with two HH. In a) the dependence of the detuning in terms of the adimensional parameters $s$. In b) the slope of the detuning $\varepsilon^\prime\equiv d \varepsilon/d s$ in terms of the detuning.}
 	\label{fig:FAQUAD_detuning_2QD_2HH}
 \end{figure}
-\subsection{\label{Subsec:FAQUAD_DQD}\texorpdfstring{$T_-(1,1)\rightarrow S(1,1)$}{Lg} in DQD}
+
 We define the fidelity of this protocol as
 \begin{equation}
 	\mathcal{F}\equiv \abs{\braket{S(1,1)}{\psi(t_f)}}^2\; .
