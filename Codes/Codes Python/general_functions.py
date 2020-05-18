@@ -551,7 +551,7 @@ def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, 
 def compute_period(x_sol, hamiltonian, parameters, hbar, index):
 	"""
 	Compute the characteristic period of the FAQUAD protocol
-	:param x_sol: (list, scipy.interpolated) List with all the interpolated functions representing the independent variables
+	:param x_sol: (list, scipy.interpolated) List (if more than one) with all the interpolated functions representing the independent variables
 	:param hamiltonian: (function) Function pointing to the Hamiltonian in which are interested
 	:param parameters: (list) List with the parameters of the system. The elements of the parameters that run can be set to 0
 	:param hbar: (float) Value for the reduced Plank's constant
