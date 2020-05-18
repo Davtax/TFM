@@ -1,13 +1,14 @@
 import numpy as np
 from hamiltonians import hamiltonian_3QD_1HH
 from general_functions import solve_system_unpack, sort_solution, save_data
-from telegram_bot import message_telegram
+from telegram_bot import message_telegram, image_telegram
 from scipy.constants import h, e
 from scipy.misc import derivative
 import concurrent.futures
 import time as timer
 import matplotlib.pyplot as plt
-from progress.bar import IncrementalBar as Bar
+from tqdm import tqdm
+import sys
 from plotting_functions import save_figure
 
 h_eV = h / e  # Value for the Plank's constant [eV * s]
@@ -78,7 +79,7 @@ for e13 in detunning13:
 result_list = []
 
 if __name__ == '__main__':
-	bar = Bar('Processing', max=len(detunning13) * len(detunning2), suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
+	pbar = tqdm(total=len(detunning13) * len(detunning2), desc='Processing', file=sys.stdout, ncols=90, bar_format='{l_bar}{bar}{r_bar}')
 
 	start = timer.perf_counter()
 
@@ -87,9 +88,7 @@ if __name__ == '__main__':
 
 		for result in results:
 			result_list.append(result)
-			bar.next()
-
-	bar.finish()
+			pbar.update()
 
 	finish = timer.perf_counter()
 
@@ -121,4 +120,5 @@ if __name__ == '__main__':
 
 	file_name = 'CTAP_TQD_1HH_Test'
 	save_figure(fig, file_name, overwrite=True, extension='png', dic='data/')
+	image_telegram('data/' + file_name + '.png')
 	save_data(file_name, [fidelity, detunning13, detunning2, Omega_max, ['fidelity', 'detunning13', 'detunning2', 'Omega_max']])

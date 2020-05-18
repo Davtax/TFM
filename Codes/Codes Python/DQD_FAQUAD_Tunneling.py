@@ -5,7 +5,8 @@ from general_functions import (solve_system_unpack, sort_solution, save_data, co
 from telegram_bot import message_telegram, image_telegram
 import concurrent.futures
 import matplotlib.pyplot as plt
-from progress.bar import IncrementalBar as Bar
+from tqdm import tqdm
+import sys
 from plotting_functions import save_figure
 import time as timer
 from scipy.constants import h, e
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 	                              [tau_vec, l1_vector, l2_vector], 0, [3, 4, 5], filter_bool=False, window=51)
 	print(timer.perf_counter() - start)
 
-	bar = Bar('Processing', max=n_tau, suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
+	pbar = tqdm(total=n_tau, desc='Processing', file=sys.stdout, ncols=90, bar_format='{l_bar}{bar}{r_bar}')
 
 	results_list = []
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
 
 		for result in results:
 			results_list.append(result)
-			bar.next()
+			pbar.update()
 
 	args_temp = sort_solution(results_list)
 
@@ -95,7 +96,7 @@ if __name__ == '__main__':
 
 	results_list = []
 
-	bar = Bar('Processing', max=n_tf * n_tau, suffix='%(percent)d%% [%(elapsed_td)s / %(eta_td)s]')
+	pbar = tqdm(total=n_tf * n_tau, desc='Processing', file=sys.stdout, ncols=90, bar_format='{l_bar}{bar}{r_bar}')
 
 	start = timer.perf_counter()
 
@@ -104,9 +105,7 @@ if __name__ == '__main__':
 
 		for result in results:
 			results_list.append(result)
-			bar.next()
-
-	bar.finish()
+			pbar.update()
 
 	finish = timer.perf_counter()
 
