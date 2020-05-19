@@ -346,7 +346,8 @@ def plot_probabilities(x_vector, prob, legend=None, labels=None, ax=None, title=
 	return ret
 
 
-def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hbar_muev_ns):
+# TODO: Comentar lo nuevo que he metido tanto en esta función como en la siguiente
+def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hbar_muev_ns, partial_Hamiltonian=None):
 	"""
 	Compute the factors need for the FAQUAD and the value of tilde{c}.
 	:param x_vec: (numpy.array) Vectors with the values of the parameters we are interested to change with a total of N values
@@ -358,23 +359,35 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 	"""
 	n, dim = np.shape(energies)  # Extract the number of steps for the independent variable, and the number of states
 
-	derivatives = np.zeros([n, dim, dim], dtype=complex)  # Matrix to save the dim coordinates for the eigenstates
+	if partial_Hamiltonian is None:
+		method_1 = True
+	else:
+		method_1 = False
 
-	for i in range(0, dim):  # Iterate over all the states
-		for j in range(0, dim):  # Iterate over all the coordinates
-			derivatives[:, j, i] = np.gradient(states[:, j, i], x_vec)  # Compute the numerical derivative
+	if method_1:
+		derivatives = np.zeros([n, dim, dim], dtype=complex)  # Matrix to save the dim coordinates for the eigenstates
+		for i in range(0, dim):  # Iterate over all the states
+			for j in range(0, dim):  # Iterate over all the coordinates
+				derivatives[:, j, i] = np.gradient(states[:, j, i], x_vec)  # Compute the numerical derivative
 
 	counter = 0  # Temp variable to save the number of factors computed
 	factors = np.zeros([n, dim - 1])  # Matrix to save the factors
 	for i in range(0, dim):  # Iterate over all the states
 		if i != initial_state:  # If the state is not the initial one
 			# Compute the factor, this includes a scalar product
-			factors[:, counter] = np.abs(
-				np.sum(np.conjugate(states[:, :, initial_state]) * derivatives[:, :, i], axis=1) / (energies[:, initial_state] - energies[:, i]))
+			if method_1:
+				factors[:, counter] = np.abs(
+					np.sum(np.conjugate(states[:, :, initial_state]) * derivatives[:, :, i], axis=1) / (energies[:, initial_state] - energies[:, i]))
+			else:
+				for k in range(0, n):
+					factors[k, counter] = np.abs(
+						np.matmul(np.matmul(np.conjugate(states[k, :, i]), partial_Hamiltonian[k, :, :]), states[k, :, initial_state]) / (
+								energies[k, i] - energies[k, initial_state]) ** 2)
 			counter += 1
 
-	for i in range(0, 2):
-		factors[:, i] = medfilt(factors[:, i], 5)
+	if method_1:
+		for i in range(0, 2):
+			factors[:, i] = medfilt(factors[:, i], 5)
 
 	# Compute the c_tilda factor, that include a summation over all the states and an integration
 	c_tilde = hbar * np.sum(romb(factors, dx=np.abs(x_vec[0] - x_vec[1]), axis=0))
@@ -382,7 +395,7 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 	return factors, c_tilde
 
 
-def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar_muev_ns):
+def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar_muev_ns, method_1=True):
 	"""
 	Function to solve the ODE which gives the result for the parameters in terms of the adimensional variable s=[0,1] for the FAQUAD protocol
 	:param x_vec: (numpy.array) Vector with the values of the independent variable
@@ -404,7 +417,11 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 
 	# Rescaled time parameter s=t/tF, the end point is a bit larger than 1 since there are numerical errors, and the desired final x_vec is not
 	# reached exactly at s=1
-	s = np.linspace(0, 1.01, nt, endpoint=True)
+	if method_1:
+		s_max = 1.01
+	else:
+		s_max = 1
+	s = np.linspace(0, s_max, nt, endpoint=True)
 
 	reached = False  # Variable that controls if the final value of x_vec is reached
 	while not reached:  # While the final value is not reached
@@ -413,6 +430,9 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 		if np.any(x_sol > x_vec[-1]):  # If the final value is reached
 			index_max = np.where(x_sol > x_vec[-1])[0][0]  # Save the first index in which the final value is obtained
 			reached = True  # Exit the while loop
+		elif not method_1:
+			print('The parameter maybe not obtained the maximum value, verify it.\nConsider use the method 1.')
+			reached = True
 		else:  # If the final value is not yet reached
 			s *= 1.1  # Increase the values for s to give more time to reach the value
 			reached = False  # Continue in the loop (this line is not necessary since the variable is still = False
@@ -582,7 +602,7 @@ def compute_period(x_sol, hamiltonian, parameters, hbar, index):
 	for i in range(0, n - 1):  # Iterate over all the gaps
 		e_g[i, :] = np.abs(energies[:, i] - energies[:, i + 1])  # Compute the gaps, always a positive value
 
-	phi = hbar * romb(np.sum(e_g, axis=0), dx=(s[1] - s[0]))  # Compute the integral of the gaps
+	phi = romb(np.sum(e_g, axis=0), dx=(s[1] - s[0])) / hbar  # Compute the integral of the gaps
 
 	t = 2 * np.pi / phi  # Compute the period
 
