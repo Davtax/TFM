@@ -575,7 +575,7 @@ def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, 
 
 
 # TODO: The value for the period is not good, revisit the function to fix it
-def compute_period(x_sol, hamiltonian, parameters, hbar, index):
+def compute_period(x_sol, hamiltonian, parameters, hbar, index, state):
 	"""
 	Compute the characteristic period of the FAQUAD protocol
 	:param x_sol: (list, scipy.interpolated) List (if more than one) with all the interpolated functions representing the independent variables
@@ -607,7 +607,8 @@ def compute_period(x_sol, hamiltonian, parameters, hbar, index):
 
 	e_g = np.zeros([n - 1, ns])  # Array in which rows will be saved the gaps between the energies
 	for i in range(0, n - 1):  # Iterate over all the gaps
-		e_g[i, :] = np.abs(energies[:, i] - energies[:, i + 1])  # Compute the gaps, always a positive value
+		if i != state:
+			e_g[i, :] = np.abs(energies[:, state] - energies[:, i])  # Compute the gaps, always a positive value
 
 	phi = romb(np.sum(e_g, axis=0), dx=(s[1] - s[0])) / hbar  # Compute the integral of the gaps
 
