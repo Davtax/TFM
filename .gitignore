@@ -11,3 +11,5 @@
 *.gz
 *.toc
 *.npy
+*.docx
+*.pdf
