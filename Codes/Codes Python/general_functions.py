@@ -386,7 +386,7 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 			counter += 1
 
 	if method_1:
-		for i in range(0, 2):
+		for i in range(0, dim - 1):
 			factors[:, i] = medfilt(factors[:, i], 5)
 
 	# Compute the c_tilda factor, that include a summation over all the states and an integration
@@ -405,6 +405,7 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 	:param hbar: Value for h bar
 	:return: Vector of times and the parameter
 	"""
+	sig = np.sign(x_vec[1] - x_vec[0])
 
 	if nt is None:  # If the number of elements for the time is not given
 		nt = len(x_vec)  # The number of elements is the total number of x_vec
@@ -413,7 +414,7 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 		return interp1d(x_vec, 1 / np.sum(factors, axis=1), kind='quadratic', fill_value="extrapolate")(x)
 
 	def model(y, _):  # EDO to be solved
-		return c_tilde / hbar * factor_interpolation(y)
+		return sig * c_tilde / hbar * factor_interpolation(y)
 
 	# Rescaled time parameter s=t/tF, the end point is a bit larger than 1 since there are numerical errors, and the desired final x_vec is not
 	# reached exactly at s=1
@@ -423,19 +424,25 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 		s_max = 1
 	s = np.linspace(0, s_max, nt, endpoint=True)
 
+	counter = 0
 	reached = False  # Variable that controls if the final value of x_vec is reached
 	while not reached:  # While the final value is not reached
 		x_sol = odeint(model, x_vec[0], s)[:, 0]  # Solve numerically the values of the parameter in terms of s
-
-		if np.any(x_sol > x_vec[-1]):  # If the final value is reached
-			index_max = np.where(x_sol > x_vec[-1])[0][0]  # Save the first index in which the final value is obtained
+		counter += 1
+		if np.any(sig * x_sol > sig * x_vec[-1]):  # If the final value is reached
+			index_max = np.where(sig * x_sol > sig * x_vec[-1])[0][0]  # Save the first index in which the final value is obtained
 			reached = True  # Exit the while loop
 		elif not method_1:
-			print('The parameter maybe not obtained the maximum value, verify it.\nConsider use the method 1.')
+			print('The parameter may not reached the maximum value, verify it.\nConsider use the method 1.')
+			index_max = len(s) - 1
 			reached = True
 		else:  # If the final value is not yet reached
 			s *= 1.1  # Increase the values for s to give more time to reach the value
 			reached = False  # Continue in the loop (this line is not necessary since the variable is still = False
+
+		if counter > 20:
+			print('The limit value has not been reached.')
+			return ()
 
 	s = np.linspace(0, 1, index_max + 1)  # Compute a new vector that goes exactly up to the unity
 	x_sol = interp1d(s, x_sol[:index_max + 1], kind='quadratic')  # Interpolate and contract the data to reach the final value at s=1
