@@ -36,7 +36,7 @@ factors, c_tilde = compute_adiabatic_parameter(Delta_vector, states, energies, 0
 # Solve the EDO to obtain the dependency of eps with the parameter s
 s, Delta_sol = compute_parameters_interpolation(Delta_vector, factors, c_tilde, method_1=False)  # parameters = [Delta_sol, U, J]
 
-T = compute_period(Delta_sol, hamiltonian_two_sites, parameters, hbar, index=0)
+T = compute_period(Delta_sol, hamiltonian_two_sites, parameters, hbar, index=0, state=0)
 
 n_tf = 400
 tf_vec = np.linspace(0.1 * hbar / J, 26 * hbar / J, n_tf)
