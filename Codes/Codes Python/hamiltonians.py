@@ -98,3 +98,13 @@ def hamiltonian_2QD_1HH_All(epsilon, u, EZ, tau, l1, l2):
 	matrix[3, :] = [0, 0, 0, -EZ, 0]
 	matrix[4, :] = [0, -tau, tau, 0, u + epsilon]
 	return matrix
+
+
+def hamiltonian_two_sites(delta, u, j):
+	matrix = np.zeros([3, 3], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
+
+	matrix[0, :] = [u + delta, -np.sqrt(2) * j, 0]
+	matrix[1, :] = [-np.sqrt(2) * j, 0, -np.sqrt(2) * j]
+	matrix[2, :] = [0, -np.sqrt(2) * j, u - delta]
+
+	return matrix
