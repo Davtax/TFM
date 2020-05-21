@@ -7,7 +7,7 @@
 \usepackage{physics}
 \usepackage{xcolor}
 \usepackage{amsmath}
-\usepackage[margin=1.3in]{geometry}
+\usepackage{geometry}
 \usepackage{titling}
 \usepackage[hang, flushmargin, multiple]{footmisc}
 \usepackage[unicode, colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
@@ -17,9 +17,16 @@
 
 \setlength\parindent{0pt}
 
+\geometry{
+	left=1in,
+	top=0.75in,
+	bottom=0.75in,
+	top=0.75in
+}
+
 %
 \begin{document}
-   \droptitle = -30mm
+   \droptitle = -20mm
    \title{Notes on: FAQUAD in Quantum Dots}
 
    \author{David Fernandez Fernandez \\ e-mail: \href{mailto:david.fernandezf03@estudiante.uam.es}{david.fernandezf03@estudiante.uam.es}}
@@ -45,7 +52,7 @@ where $\varepsilon_{i\sigma}$ denoted the energy of the single-particle located 
 A typical value of the effective $g$-factor for heavy holes in GaAs could be $g=1.35$. The intradot Coulomb interaction $u$ exist when various particles occupy the same dot. There is also a spin-conserving tunnelling term $\tau$ between adjacent QD's. Finally, the operator $c_{i\sigma}$ ($c_{i\sigma}^{\dagger}$) represents the annihilation (creation) of a hole in the dot $i$ with spin $\sigma$.
 
 \section{\label{sec:DQD}Double Quantum Dot}
-The energy spectrum for a double quantum dot array (DQD) populated with two heavy holes is given in Fig~\ref{fig:eigenenergies_2QD_2HH_wo_SOC}, where we have normalized the instant eigenenergies with the Zeeman splitting energy. It's usual to work with an antisymmetric bias gate for each dot where $\varepsilon_R=-\varepsilon_L$, and define the difference as the detuning $\varepsilon\equiv \varepsilon_R-\varepsilon_L$. To obtain this results we have excluded one of the double occupation states $\ket{S(2,0)}$, which is motivated by the setups where it's energy is much higher.
+The energy spectrum for a double quantum dot array (DQD) populated with two heavy holes is given in Fig.~\ref{fig:eigenenergies_2QD_2HH_wo_SOC}, where we have normalized the instant eigenenergies with the Zeeman splitting energy. It's usual to work with an antisymmetric bias gate for each dot where $\varepsilon_R=-\varepsilon_L$, and define the difference as the detuning $\varepsilon\equiv \varepsilon_R-\varepsilon_L$. To obtain this results we have excluded one of the double occupation states $\ket{S(2,0)}$, which is motivated by the setups where it's energy is much higher.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.8\linewidth]{eigenenergies_2QD_2HH_wo_SOC.eps}
@@ -98,66 +105,150 @@ Choosing $l=d/3$ we observe that $\lambda_1/\lambda_2\approx 1/100$, being the c
 	\caption{Three lowest energies for the system of a double quantum dot array populated with two heavy holes in presence spin orbit coupling. The parameters used are $B=0.015$~T, $E_Z=1.17\; \mu$eV, $\tau=0.25\; \mu$eV, $\lambda_1=0.001\; \mu$eV, $\lambda_2=0.1\; \mu$eV and $u=2$ meV.}
 	\label{fig:eigenenergies_2QD_2HH_w_SOC}
 \end{figure}
-Our task is to pass from $\ket{T_-(1,1)}$ to $\ket{S(1,1)}$ with the minimum possible occupation of $S(0,2)$. The reason is that we want to reduce as much as possible charge noise. We have not include any term in the Hamiltonian that flip the spin of the hole without ``jumping" to some other qubit, so the only possible transition allowed is
+Our task is to pass from $\ket{T_-(1,1)}$ to $\ket{S(1,1)}$ with the minimum possible occupation of $S(0,2)$. The reason is that we want to reduce as much as possible the charge noise produced when a hole ``jump" from one dot to another. We have not include any term in the Hamiltonian that flips the spin of the hole without ``jumping" to some other qubit, so the only possible transition allowed is
 \begin{equation}
 	\ket{\downarrow,\downarrow}\rightarrow \ket{0,\uparrow\downarrow} \rightarrow \frac{1}{\sqrt{2}}\left(\ket{\uparrow,\downarrow}-\ket{\downarrow,\uparrow}\right)\; .
 \end{equation}
-There exist some quasi adiabatic techniques that take advantage of the existence of a dark-state which has no weight in the intermediate step. To check if this is also the case for our system we can compute numerically the instant eigenvectors and extracting the probability to occupy the double occupation singlet state Fig~\ref{fig:occupation_middle_state}. Here we have plotted the value $|\braket{\psi_2}{S(0,2)}|^2$ where $\ket{\psi_2}$ correspond to the state in which we are interested (orange line in Fig~(\ref{fig:eigenenergies_2QD_2HH_w_SOC})).
+There exist some quasi adiabatic techniques that take advantage of the existence of a dark-state which has no weight in the intermediate step. To check if this is also the case for our system we can compute numerically the instant eigenvectors and extract the probability of the double occupation singlet state Fig~\ref{fig:occupation_middle_state}. Here we have plotted the value $|\braket{\psi_2}{S(0,2)}|^2$ where $\ket{\psi_2}$ correspond to the instant eigenstate in which we are interested (orange line in Fig~\ref{fig:eigenenergies_2QD_2HH_w_SOC}). To study the dependency with the tunnelling we have assumed that both the spin-flip and spin-conserving rates are proportional to each other $\lambda_i\propto \tau$, specifically we have used $\lambda_2=0.25\tau$ and $\lambda_1=\lambda_2/100$. If we want to make a transition between the lowest energy triplet and the single occupation singlet we must go from $(\varepsilon(t_0)+u)/E_Z<-4$ to $(\varepsilon(t_f)+u)/E_Z>4$, this means that there is no dark state that does not populate $\ket{S(0,2)}$ in the range of detuning, unless the tunnelling parameters are high enough.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\linewidth]{occupation_middle_state.eps}
 	\caption{Contribution of the double occupation singlet state in the instant eigenstate $\ket{\psi_2}$ in terms of the detuning and the spin conserving tunnelling parameter $\tau$. For the SOC parameters we have set $\lambda_1=\lambda_2/100$ and $\lambda_2=0.25\tau$.}
 	\label{fig:occupation_middle_state}
 \end{figure}
-
-To study the dependency with the tunnelling we have assumed that both the spin-flip and spin-conserving rates are proportional to each other $\lambda_i\propto \tau$, specifically we have used $\lambda_2=0.25\tau$ and $\lambda_1=\lambda_2/100$. If we want to make a transition between the lowest energy triplet and the single occupation singlet we must go from $(\varepsilon(t_0)+u)/E_Z=-4$ to $(\varepsilon(t_f)+u)/E_Z=4$, this means that there is no dark state that does not populate the $\ket{S(0,2)}$ in the range of detuning in which we are interest unless the tunnelling parameters are high enough. This is why we will try to apply the FAst QUasi ADiabatic (FAQUAD) protocol in the next section.
-
+The ideal situation is that at the beginning (end) of the protocol the instant eigenstate corresponds to $\ket{\phi_2(0)}=\ket{T_-(1,1)}$ ($\ket{\phi_2(t_f)}=\ket{S(1,1)}$). But this is only achieved with $\varepsilon\rightarrow -\infty$ ($\varepsilon\rightarrow \infty$), so we must decide the initial and final conditions for the protocol. The higher the limits for the detuning, the more adiabatic the transfer is, obtaining higher fidelities. The price to pay is higher energy consumption and longer total times. In Fig.~\ref{fig:limits_FAQUAD} we have plotted the population of the triplet and single occupation singlet states in $\ket{\phi_2}$ for different values of the detuning and the tunnelling parameter. To maintain a balance between high fidelities and not very high detuning ranges, we will work with the limits given by $99\%$ of population. 
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=\linewidth]{limits_FAQUAD.eps}
+	\caption{Population of the states a) $\ket{T_-(1,1)}$ and b) $\ket{S(1,1)}$ in the instant eigenstate $\ket{\phi_2}$ in terms of the detuning and the tunnelling. For the SOC parameters we have set $\lambda_1=\lambda_2/100$ and $\lambda_2=0.25\tau$.}
+	\label{fig:limits_FAQUAD}
+\end{figure}
 \section{FAQUAD}
 The standard adiabaticity parameter is imposed to be constant, as
 \begin{equation}
 	\hbar\abs{\frac{\braket{\phi_1(t)}{\partial_t\phi_2(t)}}{E_1(t)-E_2(t)}}=c\; .
+	\label{eq:adiabatic_parameter}
 \end{equation}
-This is only the case in which there are two states. If we a multilevel system the above equation is rewritten as
+To simplify the numerator we can use the definition of the instantaneous eigenstate for $\ket{\phi_2}$, derivate it with respect to time and multiply both side of the equation by $\bra{\phi_1}$, obtaining
 \begin{equation}
-	\hbar \sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_t\phi_k(t)}}{E_i(t)-E_k(t)}}=c\; ,
+	\begin{split}
+	H\ket{\phi_2}&=E_2\ket{\phi_2}\\
+	\bra{\phi_1}[(\partial_t H)\ket{\phi_2}+H\ket{\partial_t\phi_2}]&=\bra{\phi_1}[(\partial_t E_2)\ket{\phi_2}+E_2\ket{\partial_t\phi_2}]\\
+	\bra{\phi_1}\partial_t H\ket{\phi_2}+E_1\braket{\phi_1}{\partial_t\phi_2}&=(\partial_t E_2)\braket{\phi_1}{\phi_2}+E_2\braket{\phi_1}{\partial_t\phi_2}\\
+	\braket{\phi_1}{\partial_t\phi_2}&=\frac{\bra{\phi_1}\partial_t H\ket{\phi_2}}{E_2-E_1}\; ,
+	\end{split}
 \end{equation}
-where the index $i$ denote the state in which we initialize the system, in our case it will be $\ket{\phi_i(t)}=\ket{T_-(1,1)}$. Using the chain rule we can write $\partial_t=\partial_\varepsilon \dot{\varepsilon}$ and the adiabatic condition is then
+where in the third line we have used the orthogonality of the eigenstates $\braket{\phi_1}{\phi_2}=0$. With this we can rewrite the adiabaticity parameter in the form
 \begin{equation}
-	\dot{\varepsilon}=\frac{c}{\hbar}\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_\varepsilon\phi_k(t)}}{E_i(t)-E_k(t)}}\right)^{-1}\; .
+\hbar\abs{\frac{\bra{\phi_1(t)}\partial_t H\ket{\phi_2(t)}}{[E_1(t)-E_2(t)]^2}}=c\; .
+\end{equation}
+This is only the case in which there are two states. If we consider a multilevel system the above equation is rewritten as
+\begin{equation}
+	\hbar \sum _{k\neq i}\abs{\frac{\bra{\phi_i(t)}\partial_t H\ket{\phi_k(t)}}{[E_i(t)-E_k(t)]^2}}=c\; ,
+\end{equation}
+where the index $i$ denotes the state in which we initialize the system. Using the chain rule we can write $\partial_t=\partial_\varepsilon \dot{\varepsilon}$ and the adiabatic condition is then
+\begin{equation}
+	\dot{\varepsilon}=\frac{c}{\hbar}\left(\sum _{k\neq i}\abs{\frac{\bra{\phi_i(t)}\partial_\varepsilon H\ket{\phi_k(t)}}{[E_i(t)-E_k(t)]^2}}\right)^{-1}\; .
 	\label{eq:detuning_EDO}
 \end{equation}
 We can rescale the total operation time $t_f$ to $s\equiv t/t_f$ and define $\tilde{c}\equiv ct_f$, allowing us to write
 \begin{equation}
-	\tilde{c}=\int_{\varepsilon(0)}^{\varepsilon(t_f)}d\varepsilon\left(\sum _{k\neq i}\abs{\frac{\braket{\phi_i(t)}{\partial_\varepsilon\phi_k(t)}}{E_i(t)-E_k(t)}}\right)\; , 
+	\tilde{c}=\int_{\varepsilon(0)}^{\varepsilon(t_f)}d\varepsilon\left(\sum _{k\neq i}\abs{\frac{\bra{\phi_i(t)}\partial_\varepsilon H\ket{\phi_k(t)}}{[E_i(t)-E_k(t)]^2}}\right)\; , 
+	\label{eq:def_c_tilde}
 \end{equation}
-what can be easily computed numerically, obtaining a value of $\tilde{c}=3.79$ ns, so with typical times of $t_f\sim 10$ ns the adiabaticity parameter obtained is $c\sim 0.4< 1$ fulfilling the adiabatic condition. Once we have obtained the value for this parameters, which will remain constant, we can numerically solve the EDO for the evolution of the detuning Eq.~(\ref{eq:detuning_EDO}). The result is shown in Fig.~\ref{fig:FAQUAD_detuning_2QD_2HH}, the dependency of this parameter with $s=t/t_f$ is plotted in a), while the derivative is represented in b) in terms of the detuning. We observe that when we reach the two avoided crossings the rate of change in the detuning decreases significantly, allowing an adiabatic passage, while in the rest of the point the velocity increases in order to speed up the transfer process.
+what can be easily computed numerically. If the condition $\tilde{c}/t_f\ll1$ is verified, them the transfer will remains adiabatic, and the wave function that describes the system can be expanded using adiabatic perturbation theory as
+\begin{equation}
+	\ket{\Psi(t)}=\sum_n a_n(t)e^{i\beta_n(t)}\ket{\phi_n(t)}
+	\label{eq:adiabatic_wave_function}
+\end{equation}
+where we have defined the phase
+\begin{equation}
+	\beta_n(t)=-\frac{1}{\hbar}\int_0^tE_n(t')dt'+i\int_0^t\langle\phi_n(t')|\dot{\phi}_n(t')\rangle dt'\; .
+\end{equation}
+Introducing Eq.(\ref{eq:adiabatic_wave_function}) in the time dependent Schrödinger equation $i\hbar\partial_t\ket{\Psi(t)}=H(t)\ket{\Psi(t)}$ we can obtain a ODE for the amplitude of each instant eigenvector
+\begin{equation}
+	\begin{split}
+	i\hbar\left[\sum_k \dot{a}_k(t)e^{i\beta_k(t)}\ket{\phi_k(t)}+ia_k(t)\dot{\beta}_k(t)e^{i\beta_k(t)}\right.&\ket{\phi_k(t)}+\\
+	\left.+a_k(t)e^{i\beta_k(t)}|\dot{\phi}_k(t)\rangle\right] &= \sum_k g_k(t)e^{i\beta_k(t)}E_k\ket{\phi_n(t)}\\
+	\sum_k\dot{a}_k(t)e^{i\beta_k(t)}\ket{\phi_k(t)}&=-\sum_k a_k(t)e^{i\beta_k(t)}|\dot{\phi}_k(t)\rangle.
+	\end{split}
+\end{equation}
+Multiplying in both side by $\ket{\phi_n}$ with $n\neq k$ we obtain the equation
+\begin{equation}
+	\dot{a}_n(t)=-\sum_{k\neq n}a_n(t)e^{iW_{nk}(t)}\bra{\phi_n(t)}\dot{\phi}_k(t)\rangle\; ,
+\end{equation}
+where we have defined $W_{nk}(t)\equiv\int_0^t\omega_{nk}(t')dt'=\frac{1}{\hbar}\int_0^t[E_n(t')-E_k(t')]dt'$. Integrating the equation 
+\begin{equation}
+	a_n(t)-a_n(0)=-\sum_{k\neq n}\int_0^te^{iW_{nk}(t')}\bra{\phi_n(t')}\dot{\phi}_k(t')\rangle dt'\; .
+\end{equation}
+We the initial condition $\ket{\Psi(0)}=\ket{\phi_m}$ we can set as a first approximation $a_k(t)=\delta_{km}$. Using this in the above expression
+\begin{equation}
+	g_n^{(1)}(t)=-\int_0^te^{iW_{nm}(t')}\bra{\phi_n(t')}\dot{\phi}_m(t')\rangle dt'\; .
+\end{equation}
+As we can see in Eq.~(\ref{eq:adiabatic_parameter}), in a FAQUAD protocol we have $\bra{\phi_n(t)}\dot{\phi}_m(t)\rangle=cr\omega_{nm}(t)$, where we have defined the sign of the absolute value $r\equiv \operatorname{sgn}[\bra{\phi_n(t)}\dot{\phi}_m(t)\rangle\omega_{nm}]$. Using this in the above integral we have the final result
+\begin{equation}
+	g_n^{(1)}=-cr\int_0^t\omega_{nm}(t')e^{iW_{nm}(t')}dt'=icr\left(e^{iW_{nm}(t)}-1\right)\; .
+\end{equation}
+The population of the $n$-state is then given by the oscillatory function
+\begin{equation}
+	\abs{\braket{\phi_n(t)}{\Psi(t)}}^2=\abs{a_n(t)}^2=2c^2\left[1-\cos(W_{nm}(t))\right]\; .
+\end{equation}
+The upper limit for the $n$-state population is $\abs{a_n(t)}^2\leq4c^2=4\tilde{c}^2/t_f^2$. In a two-level system the final population of the instant states have a period given by $T=2\pi/\Phi_{12}$ where the frequency is
+\begin{equation}
+	\Phi_{12}=\int_0 ^1 [E_1(s)-E_2(s)]ds\; .
+\end{equation}
+
+\subsection{FAQUAD in DQD: $\ket{T_-(1,1)}\rightarrow\ket{S(1,1)}$}
+Let's apply the commented FAQUAD protocol to the system of two linear quantum dots populated with two heavy holes. The goal is to transfer the triplet state $\ket{T_-(1,1)}$ to the single occupation singlet $\ket{S(1,1)}$. The first step is to compute the adiabatic parameter $\tilde{c}$ solving numerically Eq.~(\ref{eq:def_c_tilde}). Setting $u=2$ meV, $E_Z=1.17\; \mu$eV ($B=15$ mT), $\tau=0.25 \; \mu$eV, $\lambda_2=0.1\; \mu$eV , $(\varepsilon(0)+u)/E_Z=-3$ and $(\varepsilon(t_f)+u)/E_Z=3$ we obtain a value of $\tilde{c}=4.31$ ns, so with typical times of $t_f\sim 10$ ns the adiabaticity parameter obtained is $c\sim 0.4< 1$ fulfilling the adiabatic condition. Once we have obtained the value for this parameter, which will remain constant during the hole transfer, we can numerically solve the EDO for the evolution of the detuning Eq.~(\ref{eq:detuning_EDO}). The result is shown in Fig.~\ref{fig:FAQUAD_detuning_2QD_2HH}, the dependency of this parameter with $s=t/t_f$ is plotted in a), while the derivative is represented in b) in terms of the detuning itself. We observe that when we reach the two avoided crossings the rate of change in the detuning decreases significantly, allowing an adiabatic passage, while in the rest of the point the velocity increases in order to speed up the transfer process.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=1\linewidth]{FAQUAD_detuning_2QD_2HH.eps}
 	\caption{Result obtained for the detuning after applying the FAQUAD protocol to the system of DQD populated with two HH. In a) the dependence of the detuning in terms of the adimensional parameters $s$. In b) the slope of the detuning $\varepsilon^\prime\equiv d \varepsilon/d s$ in terms of the detuning.}
 	\label{fig:FAQUAD_detuning_2QD_2HH}
-\end{figure}
+\end{figure}\\
 
 We define the fidelity of this protocol as
 \begin{equation}
-	\mathcal{F}\equiv \abs{\braket{S(1,1)}{\psi(t_f)}}^2\; .
+	\mathcal{F}\equiv \abs{\braket{S(1,1)}{\Psi(t_f)}}^2\; .
 \end{equation}
-Computing this fidelity for different total times $t_f$ we obtain the results shown in Fig.~\ref{fig:FAQUAD_2QD_Results}.
+Computing this fidelity for different total times $t_f$ we obtain the results shown in Fig.~\ref{fig:FAQUAD_2QD_Results}. We can observe that the fidelity shows it's typical FAQUAD protocol behaviour, reaching a value close to the unit for large enough final times. In red we have plotted the lower bound for the fidelity, corresponding to the case in which $\ket{\phi_1}$ and $\ket{\phi_3}$ are populated with a probability given by $4\tilde{c}^2/t_f^2$. The first peak is reached at $t_f=18.17$ ns, with a fidelity of $\mathcal{F}=0.974$. In Fig.~\ref{fig:states_evolution} we plot the time evolution for the three different states for this value for the total operation time. We observe that the desired final state is obtained, but in the intermediate times the population of $S(0,2)$ is too high.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.7\linewidth]{FAQUAD_2QD_Results.eps}
-	\caption{Result for the fidelity in terms of the total time of the protocol.}
+	\caption{Result for the fidelity in terms of the total time of the protocol. The dashed red line represents the lower bound in which the two instant stares $\ket{\phi_1}$ and $\ket{\phi_3}$ are populated with probability $4\tilde{c}^2/t_f^2$. The tunnelling parameter used is $\tau=0.25\; \mu$eV.}
 	\label{fig:FAQUAD_2QD_Results}
 \end{figure}
 
-We can observe that the fidelity shows it's typical FAQUAD protocol behaviour, reaching a value close to the unit for large enough final times. The first peak is reached at $t_f=30.4$ ns, with a fidelity of $\mathcal{F}=0.992$. In Fig.~\ref{fig:states_evolution} we plot the time evolution for the three different states for this value for the total operation time. We observe that the desired final state is obtained, but in the intermediate times the population for the $S(0,2)$ state is too high.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.7\linewidth]{states_evolution.eps}
-	\caption{Evolution of the different states for the final time of $t_f=30.4$ ns and a fidelity $\mathcal{F}=0.992$.}
+	\caption{Evolution of the different states for the final time of $t_f=18.17$ ns and a fidelity $\mathcal{F}=0.974$. The tunnelling parameter used is $\tau=0.25\; \mu$eV.}
 	\label{fig:states_evolution}
 \end{figure}
 
+In order to decrease the population of $S(0,2)$ in the intermediate times we can increase the value of $\tau$. Setting the tunnelling parameters $\tau=5 \; \mu$eV, $\lambda_2=2\;\mu$eV, and the initial [final] detuning $(\varepsilon(0[t_f])+u)/E_Z=\pm10$ we obtain an adiabatic parameter $\tilde{c}=1.10$ which is lower than before. This implies that the total times can be shorter in order to obtain the same fidelity. The fidelity in terms of the final time are shown in Fig.~\ref{fig:FAQUAD_2QD_Results_2}, with a first maximum of $\mathcal{F}=0.91$ at the time $t_f=3.73$ ns. As before let's plot the evolution of the system at this final time Fig.~\ref{fig:states_evolution_2}. We can see that the population of the double occupation singlet state $\ket{S(0,2)}$
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{FAQUAD_2QD_Results_2.eps}
+	\caption{Result for the fidelity in terms of the total time of the protocol. The dashed red line represents the lower bound in which the two instant stares $\ket{\phi_1}$ and $\ket{\phi_3}$ are populated with probability $4\tilde{c}^2/t_f^2$. The tunnelling parameter used is $\tau=5\; \mu$eV.}
+	\label{fig:FAQUAD_2QD_Results_2}
+\end{figure}
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{states_evolution_2.eps}
+	\caption{Evolution of the different states for the final time of $t_f=3.73$ ns and a fidelity $\mathcal{F}=0.91$. The tunnelling parameter used is $\tau=5\; \mu$eV.}
+	\label{fig:states_evolution_2}
+\end{figure}\\
+
+We can check that the population $P_2(t)\equiv \abs{\braket{\Psi(t)}{S(0,2)}}$ has dramatically decreases, in Fig.~\ref{fig:max_pop_S22} we plot the maximum population of this state in term of the final time $t_f$. If we need to decreases the population of the double occupation state we have two options, we can increase even more the tunnelling $\tau$ or use a slower transfer with higher values of $t_f$.
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{max_pop_S22.eps}
+	\caption{Maximum population of the state $S(0,2)$ for different values of the final time. The tunnelling parameter used is $\tau=5\; \mu$eV.}
+	\label{fig:max_pop_S22}
+\end{figure}\\
+
+If the fidelities obtained are not high enough we can improve the results just by increasing the range used for the detuning.
 
 \appendix
 \section{Equivalence between SOC Models}
