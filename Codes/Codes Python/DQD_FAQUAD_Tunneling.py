@@ -42,27 +42,30 @@ u = 2000  # Intradot interaction (ueV)
 time_step = 1e-3
 
 n_eps = 10000
-limit = 200
+limit = 500
 eps_vector = np.linspace(-limit, limit, n_eps) * ET - u
 
-n_tau = 1
-tau_vec = np.linspace(0.1, 5, n_tau)
+n_tau = 2
+tau_vec = np.linspace(0.1, 4, n_tau, endpoint=True)
 n_tf = 1000
-tf_vec = np.linspace(0.1, 50, n_tf)
+tf_vec = np.linspace(0.1, 50, n_tf, endpoint=True)
 
 l2_vector = tau_vec * 0.4
 l1_vector = l2_vector / 100
 
 parameters = [0, u, ET, 0, 0, 0]
 
-limit1 = 0.99
-limit2 = 0.99
+limit1 = 0.999
+limit2 = 0.999
 state_1 = 0
 state_2 = 1
 adiabatic_state = 1
 
 density0 = np.zeros([3, 3], dtype=complex)  # Initialize the variable to save the density matrix
 density0[0, 0] = 1  # Initially the only state populated is the triplet (in our basis the first state)
+
+partial_hamiltonian = np.zeros([n_eps, 3, 3], dtype=complex)
+partial_hamiltonian[:, 2, 2] = 1
 
 if __name__ == '__main__':
 	start = timer.perf_counter()
