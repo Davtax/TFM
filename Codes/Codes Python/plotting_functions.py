@@ -5,6 +5,8 @@ import os.path
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from general_functions import question_overwrite
 
+cycle_color = ['#449AE0', '#E04A4A', '#F9BD55', '#35B26F', '#6E5DAD', '#563B18', '#EA927E', '#2D383D', '#74DD59', '#67F9CD']
+
 
 def save_figure(fig, name, overwrite=None, extension='eps', dic=None):
 	"""
@@ -35,13 +37,13 @@ def save_figure(fig, name, overwrite=None, extension='eps', dic=None):
 		if extension != 'png':
 			fig.savefig(file_dic_copy, format='png',
 			            bbox_inches="tight")  # Save the figure with the corresponding file direction and the correct extension
-
+		print('Figure saved')
 	return ()
 
 
-def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15, annotation_size=20, title_size=20, length_tick=6.5, legend_size=15,
-                figsize=None, x_ticks_vector=None, y_ticks_vector=None, legend=False, tick_direction='in', lines_bool=True, lines_style=None,
-                styles=True):
+def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15, title_size=20, length_tick=6.5, legend_size=15, figsize=None,
+                x_ticks_vector=None, y_ticks_vector=None, legend=False, tick_direction='in', lines_bool=True, lines_style=None, styles=True,
+                colors_bool=True):
 	"""
 	Function to modify the parameters of a figure to make it better looking for put in a LaTeX document.
 	:param ax: (matplotlib.axis) Axis in which we want to iterate
@@ -49,7 +51,6 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 	:param lines_width: (float) With for the lines
 	:param label_size:  (float) Size for the label title font
 	:param tick_label_size: (float) Size for the tick label font
-	:param annotation_size:  (float) Size for the text added to the plot
 	:param title_size: (float) Size for the title font
 	:param length_tick:  (float) Length of the major ticks
 	:param legend_size: (float) Size for the legend font
@@ -62,6 +63,7 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 	:param styles: (Bool) If the user wants to change the styles of the lines
 	:param lines_style: (List) List with the line style
 	"""
+
 	# Modify the size of the labels
 	ax.xaxis.label.set_size(label_size)
 	ax.yaxis.label.set_size(label_size)
@@ -79,8 +81,15 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 	if lines_bool:  # If the function can change the lines
 		lines = ax.lines  # Extract the lines
 
-		for line in lines:  # Iterate over the lines
+		for i, line in enumerate(lines):  # Iterate over the lines
 			line.set_linewidth(lines_width)  # Change the width
+
+		if colors_bool:
+			for i,line in enumerate(lines):
+				if len(lines) > 1:
+					line.set_color(cycle_color[i % len(cycle_color)])
+				else:
+					line.set_color(cycle_color[7])
 
 		if lines_style is None:  # If a line style is not given
 			lines_style = ['-', '--', '-.', ':']  # Obtain the default line styles
