@@ -131,7 +131,11 @@ def extract_interpolation(x, parameters, which, normalization=1):
 	return temp
 
 
-def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normalization, hbar):
+def decoherence_test(rho, gamma):
+	return gamma * (rho - np.diag(np.diag(rho)))
+
+
+def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normalization, hbar, decoherence_fun=None, parameters_decoherence=None):
 	"""
 	Function to give the numerical value for the EDO that represent the evolution of the density matrix at a given time
 	:param t: (float) Time at which we want to evaluate the EDO.
@@ -146,7 +150,10 @@ def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normaliza
 	"""
 	rho = np.reshape(y, [dim, dim])  # Un-flatten the density matrix
 
-	decoherence = 0  # For the moment I will not include decoherence
+	if decoherence_fun is not None:
+		decoherence = decoherence_fun(rho, *parameters_decoherence)
+	else:
+		decoherence = 0  # For the moment I will not include decoherence
 
 	# Extract the values for the interpolation parameters
 	parameters_interpolated = extract_interpolation(t, parameters, which, normalization=normalization)
@@ -158,7 +165,7 @@ def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normaliza
 
 
 def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False, hbar=hbar_muev_ns, normalization=1, method='RK45', t_eval=False,
-                 atol=1e-6, rtol=1e-3):
+                 atol=1e-6, rtol=1e-3, decoherence_fun=None, decoherence_param=None):
 	"""
 	Function to numerically solve the time evolution of a given density matrix.
 	:param time: (numpy.array) Array with the times at which we want to compute the evolution
@@ -186,7 +193,8 @@ def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False
 
 	# Solve the system at the given time, with the correct initial conditions
 	sol = solve_ivp(density_matrix_equation, (time[0], time[-1]), density0.flatten(), t_eval=t_eval_array,
-	                args=[dim, parameters, hamiltonian, which, normalization, hbar], method=method, atol=atol, rtol=rtol)
+	                args=[dim, parameters, hamiltonian, which, normalization, hbar, decoherence_fun, decoherence_param], method=method, atol=atol,
+	                rtol=rtol)
 
 	if not full:  # If the user only want the result of the EDO
 		time = sol.t
@@ -606,11 +614,13 @@ def compute_period(x_sol, hamiltonian, parameters, hbar, index, state):
 	n = np.shape(energies)[1]  # Extract the dimension of the Hamiltonian
 
 	e_g = np.zeros([n - 1, ns])  # Array in which rows will be saved the gaps between the energies
-	for i in range(0, n - 1):  # Iterate over all the gaps
+	counter = 0
+	for i in range(0, n):  # Iterate over all the gaps
 		if i != state:
-			e_g[i, :] = np.abs(energies[:, state] - energies[:, i])  # Compute the gaps, always a positive value
+			e_g[counter, :] = np.abs(energies[:, state] - energies[:, i])  # Compute the gaps, always a positive value
+			counter += 1
 
-	phi = romb(np.sum(e_g, axis=0), dx=(s[1] - s[0])) / hbar  # Compute the integral of the gaps
+	phi = romb(e_g, dx=(s[1] - s[0]), axis=1) / hbar  # Compute the integral of the gaps
 
 	t = 2 * np.pi / phi  # Compute the period
 
