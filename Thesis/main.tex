@@ -40,6 +40,9 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \usepackage{mathpazo} % Use the Palatino font by default
 
 \usepackage[backend=bibtex,sorting=none,style=numeric-comp]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
+\DefineBibliographyStrings{english}{%
+	bibliography = {References},
+}
 
 \addbibresource{references.bib} % The filename of the bibliography
 
@@ -187,8 +190,22 @@ The acknowledgments and the people to thank go here, don't forget to include you
 
 \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
 
-\textbf{LAH} & \textbf{L}ist \textbf{A}bbreviations \textbf{H}ere\\
-\textbf{WSF} & \textbf{W}hat (it) \textbf{S}tands \textbf{F}or\\
+\textbf{2DEG} & \textbf{2} \textbf{D}imensinal \textbf{E}lectron \textbf{G}as\\
+\textbf{DOSS}& \textbf{D}ouble \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
+\textbf{DQD} & \textbf{D}ouble \textbf{Q}uantum \textbf{D}ot\\
+\textbf{FAQUAD} & \textbf{FA}ast \textbf{Qu}asi \textbf{A}diabatic \textbf{D}ynamics\\
+\textbf{FF} & \textbf{F}ast \textbf{F}orward\\
+\textbf{HH} & \textbf{H}eavy \textbf{H}ole\\
+\textbf{IE} & \textbf{I}nverse \textbf{E}ngineering\\
+\textbf{ODE} & \textbf{O}rdinary \textbf{D}ifferential \textbf{E}quation\\
+\textbf{QD} & \textbf{Q}uantum \textbf{D}ot\\
+\textbf{QPC} & \textbf{Q}uantum \textbf{P}oint \textbf{C}ontact\\
+\textbf{SOC} & \textbf{S}pin-\textbf{O}rbit \textbf{C}oupling\\
+\textbf{SOSS}& \textbf{S}ingle \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
+\textbf{STA} & \textbf{S}hortcut \textbf{T}o \textbf{A}diabaticity\\
+\textbf{STIRAP} & \textbf{Sti}mulated \textbf{R}aman \textbf{A}diabatic \textbf{P}assage\\
+\textbf{TQD} & \textbf{T}riple \textbf{Q}uantum \textbf{D}ot
+
 
 \end{abbreviations}
 
@@ -215,16 +232,18 @@ The acknowledgments and the people to thank go here, don't forget to include you
 
 \mainmatter % Begin numeric (1,2,3...) page numbering
 
+\renewcommand{\thechapter}{\Roman{chapter}}
+
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
 
 % Include the chapters of the thesis as separate files from the Chapters folder
 % Uncomment the lines as you write the chapters
 
 \include{Chapters/Chapter1}
-%\include{Chapters/Chapter2} 
-%\include{Chapters/Chapter3}
-%\include{Chapters/Chapter4} 
-%\include{Chapters/Chapter5} 
+\include{Chapters/Chapter2} 
+\include{Chapters/Chapter3}
+\include{Chapters/Chapter4} 
+\include{Chapters/Chapter5} 
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - APPENDICES
@@ -235,8 +254,8 @@ The acknowledgments and the people to thank go here, don't forget to include you
 % Include the appendices of the thesis as separate files from the Appendices folder
 % Uncomment the lines as you write the Appendices
 
-%\include{Appendices/AppendixA}
-%\include{Appendices/AppendixB}
+\include{Appendices/AppendixA}
+\include{Appendices/AppendixB}
 %\include{Appendices/AppendixC}
 
 %----------------------------------------------------------------------------------------
