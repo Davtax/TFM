@@ -60,7 +60,7 @@ cbar2.set_label(r'$\max(P2(t))$', fontsize=labels, labelpad=10)
 cbar2.ax.tick_params(labelsize=ticks)
 
 ax2.set_xlabel(r'$t_f\; [ns]$')
-ax2.set_ylabel(r'$\Gamma\; [ns^{-1}]$', labelpad=10);
+ax2.set_ylabel(r'$\Gamma\; [ns^{-1}]$', labelpad=10)
 
 if save:
 	ax1.text(-4.5, 0.11, 'a)', {'fontsize': text})
