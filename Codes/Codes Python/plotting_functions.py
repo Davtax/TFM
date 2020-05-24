@@ -85,7 +85,7 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 			line.set_linewidth(lines_width)  # Change the width
 
 		if colors_bool:
-			for i,line in enumerate(lines):
+			for i, line in enumerate(lines):
 				if len(lines) > 1:
 					line.set_color(cycle_color[i % len(cycle_color)])
 				else:
@@ -105,6 +105,8 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 
 	if legend:  # If exist a legend
 		ax.legend(fontsize=legend_size)  # Change the legend font size
+
+	ax.autoscale(tight=True)
 
 
 def zoomed_plot(fig, ax, pos, size, data, x_limit, y_limit, color='tab:blue', line_style='-', vertex=None):
