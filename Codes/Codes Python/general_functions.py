@@ -9,6 +9,7 @@ from scipy.interpolate import interp1d
 from scipy.constants import h, e
 import os
 from scipy.signal import savgol_filter, medfilt
+from qutip.operators import jmat
 
 hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
 
@@ -135,6 +136,27 @@ def decoherence_test(rho, gamma):
 	return gamma * (rho - np.diag(np.diag(rho)))
 
 
+def stochastic_noise(rho, t, normalization, hbar, hamiltonian, gamma, parameters):
+	which = check_callable(parameters)
+	parameters_interpolated = extract_interpolation(t, parameters, which, normalization=normalization)
+	hamiltonian_temp = hamiltonian(*parameters_interpolated)
+	return -gamma ** 2 / (2 * hbar ** 2) * commutator(hamiltonian_temp, commutator(hamiltonian_temp, rho))
+
+
+def stochastic_noise_Yue(rho, t, normalization, hbar, gamma):
+	temp = jmat(1)
+	sum = 0
+	for i in range(0, 3):
+		j = temp[i].full()
+		sum += commutator(j, commutator(j, rho))
+
+	return - gamma / 2 * sum
+
+
+def commutator(a, b, sign=1):
+	return np.matmul(a, b) - sign * np.matmul(b, a)
+
+
 def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normalization, hbar, decoherence_fun=None, parameters_decoherence=None):
 	"""
 	Function to give the numerical value for the EDO that represent the evolution of the density matrix at a given time
@@ -151,7 +173,7 @@ def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normaliza
 	rho = np.reshape(y, [dim, dim])  # Un-flatten the density matrix
 
 	if decoherence_fun is not None:
-		decoherence = decoherence_fun(rho, *parameters_decoherence)
+		decoherence = decoherence_fun(rho, t, normalization, hbar, *parameters_decoherence)
 	else:
 		decoherence = 0  # For the moment I will not include decoherence
 
@@ -219,7 +241,7 @@ def solve_system_unpack(pack):
 		extra_param = pack[-1]
 	else:
 		extra_param = {}
-	return [pack[0], solve_system(*pack[1:-1], prob=True, **extra_param)[1]]
+	return [pack[0], solve_system(*pack[1:-1], prob=True, **extra_param)[:2]]
 
 
 def sort_solution(data):
@@ -306,7 +328,7 @@ def compute_eigensystem(parameters, hamiltonian, hypermatrix=None, plot=False, x
 	return ret
 
 
-def plot_probabilities(x_vector, prob, legend=None, labels=None, ax=None, title=None, limit=0):
+def plot_probabilities(x_vector, prob, legend=None, labels=None, ax=None, title=None, limit=0, limits_axis=None):
 	"""
 	Function to plot the evolution of the probabilities in the time.
 	:param x_vector: (numpy.array) Vector for the x-axis in the plot, usually time
@@ -348,6 +370,10 @@ def plot_probabilities(x_vector, prob, legend=None, labels=None, ax=None, title=
 
 	if title is not None:  # If title is provided
 		ax.set_title(title)
+
+	if limits_axis is not None:
+		ax.set_xlim(limits_axis[0])
+		ax.set_ylim(limits_axis[1])
 
 	ret.append(ax)  # Include the axis to the return
 
@@ -582,7 +608,6 @@ def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, 
 	return limit_1_vec, limit_2_vec
 
 
-# TODO: The value for the period is not good, revisit the function to fix it
 def compute_period(x_sol, hamiltonian, parameters, hbar, index, state):
 	"""
 	Compute the characteristic period of the FAQUAD protocol

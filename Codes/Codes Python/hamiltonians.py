@@ -108,3 +108,10 @@ def hamiltonian_two_sites(delta, u, j):
 	matrix[2, :] = [0, -np.sqrt(2) * j, u - delta]
 
 	return matrix
+
+
+def hamiltonian_stochastic_detunning(epsilon):
+	matrix = np.zeros([3, 3], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
+
+	matrix[2, 2] = epsilon
+	return matrix

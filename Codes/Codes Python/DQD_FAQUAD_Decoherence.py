@@ -1,7 +1,7 @@
 import numpy as np
-from hamiltonians import hamiltonian_2QD_1HH_Lowest
+from hamiltonians import hamiltonian_2QD_1HH_Lowest, hamiltonian_stochastic_detunning
 from general_functions import (solve_system_unpack, sort_solution, save_data, compute_adiabatic_parameter, compute_parameters_interpolation,
-	compute_eigensystem, compute_limits, decoherence_test)
+	compute_eigensystem, compute_limits, stochastic_noise)
 from telegram_bot import message_telegram, image_telegram
 import concurrent.futures
 import matplotlib.pyplot as plt
@@ -23,16 +23,26 @@ tau = 4
 l2 = tau * 0.4
 l1 = l2 / 100
 
-n_eps = 2 ** 15 + 1  # This number of elements is requiered for the romb method of integration used below
-limit_eps_up = 202
-limit_eps_low = -333
-eps_vector = np.linspace(limit_eps_low, limit_eps_up, n_eps) * ET - u
+limit1 = 0.999
+limit2 = 0.999
+state_1 = 0
+state_2 = 1
+adiabatic_state = 1
 
-n_tf = 300
+lim = 10 ** 4
+eps_vector_temp = np.linspace(-lim, lim, 2 ** 14) * ET - u
+parameters_temp = [eps_vector_temp, u, ET, tau, l1, l2]
+lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters_temp, limit1, limit2, state_1, state_2, adiabatic_state, eps_vector_temp, [tau],
+                              0, 3, filter_bool=False)
+
+n_eps = 2 ** 15 + 1  # This number of elements is required for the romb method of integration used below
+eps_vector = np.linspace(lim_T[0], lim_S[0], n_eps)
+
+n_tf = 100
 tf_vec = np.linspace(0.1, 25, n_tf, endpoint=True)
 
-n_Gamma = 50
-Gamma_vec = -np.linspace(0, 0.1, n_Gamma, endpoint=True)
+n_Gamma = 10
+Gamma_vec = np.linspace(0, 1e-3, n_Gamma, endpoint=True)
 
 density0 = np.zeros([3, 3], dtype=complex)  # Initialize the variable to save the density matrix
 density0[0, 0] = 1  # Initially the only state populated is the triplet (in our basis the first state)
@@ -40,7 +50,7 @@ density0[0, 0] = 1  # Initially the only state populated is the triplet (in our 
 partial_hamiltonian = np.zeros([n_eps, 3, 3], dtype=complex)
 partial_hamiltonian[:, 2, 2] = 1
 
-parameters = [eps_vector, u, ET, tau, l1, l2]
+parameters = [eps_vector, u, ET, tau, l1, l2]  # List with the parameters of the system
 energies, states = compute_eigensystem(parameters, hamiltonian_2QD_1HH_Lowest)
 factors, c_tilde = compute_adiabatic_parameter(eps_vector, states, energies, 1, hbar=hbar_muev_ns, partial_Hamiltonian=partial_hamiltonian)
 s, eps_sol = compute_parameters_interpolation(eps_vector, factors, c_tilde, method_1=False)
@@ -51,35 +61,37 @@ for i in range(0, n_tf):
 	time = np.linspace(0, tf_vec[i], n_t)
 	for j in range(0, n_Gamma):
 		temp = [i * n_Gamma + j, time, density0, [eps_sol, u, ET, tau, l1, l2], hamiltonian_2QD_1HH_Lowest,
-		        {'normalization': tf_vec[i], 'decoherence_fun': decoherence_test, 'decoherence_param': [Gamma_vec[j]]}]
+		        {'normalization': tf_vec[i], 'hbar': hbar_muev_ns, 'decoherence_fun': stochastic_noise,
+		         'decoherence_param': [hamiltonian_stochastic_detunning, Gamma_vec[j], [eps_sol]]}]
 		args.append(temp)
 
 if __name__ == '__main__':
 	results_list = []
-
 	pbar = tqdm(total=n_tf * n_Gamma, desc='Processing', file=sys.stdout, ncols=90, bar_format='{l_bar}{bar}{r_bar}')
-
 	start = timer.perf_counter()
-
 	with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
 		results = executor.map(solve_system_unpack, args, chunksize=4)
-
 		for result in results:
 			results_list.append(result)
 			pbar.update()
-	pbar.refresh()
 
+	pbar.refresh()
 	finish = timer.perf_counter()
 
 	results = sort_solution(results_list)
 
+	density_matrix = []
+	probabilities = []
+	for temp in results:
+		density_matrix.append(temp[0])
+		probabilities.append(temp[1])
+
 	population_middle = np.zeros([n_tf, n_Gamma])
 	fidelity = np.zeros([n_tf, n_Gamma])
-
 	for i in range(0, n_tf):
 		for j in range(0, n_Gamma):
 			index = i * n_Gamma + j
-			temp = results[index]
+			temp = probabilities[index]
 			population_middle[i, j] = np.max(temp[:, 2])
 			fidelity[i, j] = temp[-1, 1]
 
