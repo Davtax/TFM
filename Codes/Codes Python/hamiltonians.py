@@ -44,7 +44,7 @@ def hamiltonian_3QD_1e(e1, e2, e3, EZ, tN12, tN23):
 	:param EZ: (float) Value for the Zeeman splitting: EZ= mu * g * B
 	:param tN12: (float) Value for the gate voltage for the spin conserving tunneling between the dots 1 and 2
 	:param tN23: (float) Value for the gate voltage for the spin conserving tunneling between the dots 2 and 3
-	:return: (numpy.array) Matrix representing the Hamiltonian for the system which the given parameters.
+	:return: (numpy.array) Matrix representing the Hamiltonian for the system with the given parameters.
 	"""
 
 	matrix = np.zeros([3, 3], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
@@ -57,7 +57,7 @@ def hamiltonian_3QD_1e(e1, e2, e3, EZ, tN12, tN23):
 	return matrix
 
 
-def hamiltonian_2QD_1HH_Lowest(epsilon, u, EZ, tau, l1, l2):
+def hamiltonian_2QD_1HH_Lowest(epsilon, u, EZ, tau, l1, l2, error=0):
 	"""
 	Creation of the Hamiltonian for the three lowest energy states for the system of a double quantum dot array with 2 HH. The basis used is:
 	[|T_-(1,1)>, |S(1,1)>, |S(0,2)>]
@@ -69,6 +69,8 @@ def hamiltonian_2QD_1HH_Lowest(epsilon, u, EZ, tau, l1, l2):
 	:param l2: (float) SOC between |T_-(1,1)> and |S(0,2)>
 	:return: (numpy.array) Matrix representing the Hamiltonian.
 	"""
+	epsilon *= (1 + error)
+
 	matrix = np.zeros([3, 3], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
 
 	matrix[0, :] = [-EZ, l1, l2]
