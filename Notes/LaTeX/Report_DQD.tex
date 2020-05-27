@@ -12,6 +12,7 @@
 \usepackage[hang, flushmargin, multiple]{footmisc}
 \usepackage[unicode, colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
 \usepackage{footnotebackref}
+\usepackage{ mathrsfs }
 
 \graphicspath{ {images/} }
 
@@ -263,12 +264,67 @@ We can check that increasing the value of $\tau$ and $\lambda_2$ has proved that
 	\label{fig:max_pop_S22}
 \end{figure}\\
 
-\textcolor{red}{COMMENT INTRODUCTION OF DECOHERENCE}
+\subsection{Robustness}
+To study the robustness of the protocol we will take into account to possible sources of error that play an important role in the experiments. One of them is a systematic error in the detuning due to an imperfect calibration of the devices. This effect is included by a constant shift in the value of the detuning $\varepsilon\rightarrow (1+\delta_0)\varepsilon$. This is the same than including a new term in the total Hamiltonian $H(t)\rightarrow H_0(t) +\delta_0H_1(t)$ with $H_0(t)$ the ideal unperturbed Hamiltonian and the new term
+\begin{equation}
+	H_1(t)=\mqty(0 & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & \varepsilon(t))\; .
+\end{equation}
+With this the dynamic of the density matrix is written as
+\begin{equation}
+	\dot{\rho}=-\frac{i}{\hbar}[H_0+\delta _0H_1,\rho]\;.
+	\label{eq:dinamycs_systematic_error}
+\end{equation}
+Another possible source of error in the real life implementation of the FAQUAD protocol is the existence of noise in the devices, this corresponds to the stochastic Hamiltonian $H_2$. The Schrödinger equation will now depends in a Gaussian white noise $\xi(t)$ as
+\begin{equation}
+	i\hbar\partial_t\ket{\Psi(t)}=(H_0+\gamma_0 H_2\xi(t))\ket{\Psi(t)}\; .
+	\label{eq:Schrodinger_eq_stochastic}
+\end{equation}
+The function $\xi(t)$ is just the derivative of a Brownian motion. The conditions that must fulfil to represent a white noise is to have zero mean value $\expval{\xi(t)}=0$ and must be uncorrelated at different times $\expval{\xi(t)\xi(t')}=\delta(t-t')$. Averaging over different realizations we define the mean density matrix as $\rho(t)=\expval{\rho_\chi}$. The dynamical equation for the stochastic density matrix can be obtained from Eq.~(\ref{eq:Schrodinger_eq_stochastic}), namely
+\begin{equation}
+	\frac{d}{dt}\rho_\xi=-\frac{i}{\hbar}[H_0,\rho_\xi]-\frac{i\gamma_0}{\hbar}[H_2,\xi\rho_\xi]\; ,
+	\label{eq:stochastic_density_matrix_eq}
+\end{equation}
+after averaging over the noise the equation is rewritten as
+\begin{equation}
+	\frac{d}{dt}\rho=-\frac{i}{\hbar}[H_0,\rho]-\frac{i\lambda}{\hbar}[H_2,\expval{\xi\rho_\xi}]\; .
+	\label{eq:partial_result}
+\end{equation}
+In order to simplify the last term we use the Navikov's theorem which for a Gaussian noise reads
+\begin{equation}
+	\expval{\xi(t)\mathscr{F}[\xi(t)]}=\int_0^t dx\expval{\xi(t)\xi(t)}\expval{\frac{\partial \mathscr{F}}{\delta \xi(s)}}\;,
+\end{equation}
+with $\mathscr{F}[\xi(t)]$ some function that depends on the noise. Using the fact that we are dealing with a white noise the above equation is simplified as
+\begin{equation}
+	\expval{\xi(t)\mathscr{F}[\xi(t)]}=\frac{1}{2}\expval{\frac{\partial \mathscr{F}}{\delta \xi(s)}}_{s=t}\; .
+	\label{eq:result_Navikov}
+\end{equation}
+Integrating Eq.~(\ref{eq:stochastic_density_matrix_eq}) we obtain the expression
+\begin{equation}
+	\rho_\xi=-\frac{i}{\hbar}\int_0t dt'[H_1(t'),\rho_\xi]-\frac{i\gamma_0}{\hbar}\int_0^t dt'[H_2(t'),\rho_\xi]\xi(s)\; .
+\end{equation}
+After the substitution $\mathscr{F}[\xi(t)]=\rho_\xi$ we can use Eq.~(\ref{eq:result_Navikov}) and obtain the expression
+\begin{equation}
+	\expval{\xi\rho_\xi}=-\frac{i\gamma_0}{2\hbar}[H_2(t),\rho]\; .
+\end{equation}
+Using this in Eq.~(\ref{eq:partial_result}) we can finally obtain the ODE that governs the dynamics of the density matrix under a stochastic white noise
+\begin{equation}
+	\dot{\rho}=-\frac{i}{\hbar}[H_0,\rho]-\frac{\gamma_0^2}{2\hbar^2}[H_2,[H_2,\rho]]\; .
+	\label{eq:dinamycs_stochastic_error}
+\end{equation}
+This noise leads to a decoherence in the system. In our system this noise is also due to the variations in the detuning, so
+\begin{equation}
+	H_2(t)=H_1(t)=\mqty(0 & 0 & 0 \\ 0 & 0 & 0 \\ 0 & 0 & \varepsilon(t))\; .
+\end{equation}
+ Merging Eq.~(\ref{eq:dinamycs_systematic_error}) and Eq.~(\ref{eq:dinamycs_stochastic_error}) we have the master equation in a Lindblad form
+\begin{equation}
+	\dot{\rho}=\frac{i}{\hbar}[H_0+\delta_0H_1,\rho]-\frac{\gamma_0^2}{2\hbar^2}\left(H_2^2\rho+\rho H_2^2-2H_2\rho H_2\right)\; .
+\end{equation}
+In Fig.~\ref{fig:FAQUAD_DQD_errors} we have studied the dependence of the fidelity with the systematic and stochastic error parameters separately. In both of the we can find the characteristics fringes that we have already commented in the previous section. In the dependence with the systematic error we find that if the detuning is greater than the given by the FAQUAD protocol the fidelity increases at high final times. This is explained by the fact that, as he have seen in Fig.~ \ref{fig:limits_FAQUAD}, increasing the detuning range means that the initial and final instant eigenstates are closer to the desired triplet and singlet states respectively. \textcolor{red}{FINISH THIS}
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=\linewidth]{FAQUAD_DQD_Decoherence.pdf}
-	\caption{Dependence for the a) fidelity, and b) maximum population of $S(0,2)$ in terms of the final time and the decoherence parameters. The tunnelling parameters have been set to $\tau=4\; \mu$eV and $\lambda_{2}=1.6\; \mu$eV.}
-	\label{fig:FAQUAD_DQD_Decoherence}
+	\caption{Fidelity of FAQUAD protocol for  The tunnelling parameters have been set to $\tau=4\; \mu$eV and $\lambda_{2}=1.6\; \mu$eV.}
+	\label{fig:FAQUAD_DQD_errors}
 \end{figure}
 \newpage
 \appendix
