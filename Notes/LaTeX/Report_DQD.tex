@@ -12,9 +12,9 @@
 \usepackage[hang, flushmargin, multiple]{footmisc}
 \usepackage[unicode, colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
 \usepackage{footnotebackref}
-\usepackage{ mathrsfs }
+\usepackage{mathrsfs}
 
-\graphicspath{ {images/} }
+\graphicspath{{images/}}
 
 \setlength\parindent{0pt}
 
@@ -264,6 +264,27 @@ We can check that increasing the value of $\tau$ and $\lambda_2$ has proved that
 	\label{fig:max_pop_S22}
 \end{figure}\\
 
+The variation of the tunnelling has one more consequence, in Fig.~(\ref{fig:FAQUAD_DQD_Tunnelling}) we have plotted the error defined as $\epsilon\equiv 1-\mathcal{F}$ in terms of the final time and $\tau$. We can see that the higher the tunnelling, to sooner the first peak is achieved.
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{FAQUAD_DQD_Tunnelling.eps}
+	\caption{Error $\epsilon\equiv 1-\mathcal{F}$ for the FAQUAD protocol in terms of the total time $t_f$ and the tunnelling $\tau$. For the spin-flip tunnellings we have set $\lambda_2=0.4\tau$ and $\lambda_1=\lambda_2/100$. Note the logarithm scale, high fidelity regions are colored in orange/red.}
+	\label{fig:FAQUAD_DQD_Tunnelling}
+\end{figure}
+
+Identifying $\ket{0}\equiv \ket{T_-(1,1)}$ and $\ket{1}\equiv \ket{S(1,1)}$ we can plot the trajectory of the system in the Bloch sphere Fig.~\ref{fig:Bloch_sphere}. We can see that changing the final time for the protocol we can modify the angle $\theta:[-\pi,\pi]$. Letting the system evolve with a static Hamiltonian gives us the possibility to modify the the angle $\phi:[0,2\pi]$ which will depends on the total time and the difference in energies between the singlet and the triplet states
+\begin{equation}
+	\phi(t)=\frac{1}{\hbar}\int_0^{t'}[E_{S(1,1)}-E_{T_-}]\; .
+\end{equation}
+This difference can be controlled via the magnetic field, at $\varepsilon\rightarrow\pm\infty$ we have $[E_{S(1,1)}-E_{T_-}]=E_Z=g^*\mu_B B$. With this two operation we can construct any single-qubit gate.
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.5\linewidth]{Bloch_sphere.pdf}
+	\caption{Trajectory in the Bloch sphere for the FAQUAD protocol for different final times. The tunnellings used are $\tau=4\; \mu$eV and $\lambda_2=1.6\; \mu$eV.}
+	\label{fig:Bloch_sphere}
+\end{figure}
+
+
 \subsection{Robustness}
 To study the robustness of the protocol we will take into account to possible sources of error that play an important role in the experiments. One of them is a systematic error in the detuning due to an imperfect calibration of the devices. This effect is included by a constant shift in the value of the detuning $\varepsilon\rightarrow (1+\delta_0)\varepsilon$. This is the same than including a new term in the total Hamiltonian $H(t)\rightarrow H_0(t) +\delta_0H_1(t)$ with $H_0(t)$ the ideal unperturbed Hamiltonian and the new term
 \begin{equation}
@@ -319,11 +340,11 @@ This noise leads to a decoherence in the system. In our system this noise is als
 \begin{equation}
 	\dot{\rho}=\frac{i}{\hbar}[H_0+\delta_0H_1,\rho]-\frac{\gamma_0^2}{2\hbar^2}\left(H_2^2\rho+\rho H_2^2-2H_2\rho H_2\right)\; .
 \end{equation}
-In Fig.~\ref{fig:FAQUAD_DQD_errors} we have studied the dependence of the fidelity with the systematic and stochastic error parameters separately. In both of the we can find the characteristics fringes that we have already commented in the previous section. In the dependence with the systematic error we find that if the detuning is greater than the given by the FAQUAD protocol the fidelity increases at high final times. This is explained by the fact that, as he have seen in Fig.~ \ref{fig:limits_FAQUAD}, increasing the detuning range means that the initial and final instant eigenstates are closer to the desired triplet and singlet states respectively. \textcolor{red}{FINISH THIS}
+In Fig.~\ref{fig:FAQUAD_DQD_errors} we have studied the dependence of the fidelity with the systematic and stochastic error parameters separately. In both of the we can find the characteristics fringes that we have already commented in the previous section. In the dependence with the systematic error we find that if the detuning is greater than the given by the FAQUAD protocol the fidelity increases at high final times. This is explained by the fact that, as he have seen in Fig.~ \ref{fig:limits_FAQUAD}, increasing the detuning range means that the initial and final instant eigenstates are closer to the desired triplet and singlet states respectively. In the case of dephasing, the first maximum fidelity is reached at the same final time, independently of the stochastic noise parameters $\gamma_0$. For $\gamma_0\neq 0$ the fidelity decays with the total time $t_f$. If this parameters is high enough the system can only reach one peak in the fidelity, for larger final times the effects of the decoherence  dominate the dynamics of the system.
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=\linewidth]{FAQUAD_DQD_Decoherence.pdf}
-	\caption{Fidelity of FAQUAD protocol for  The tunnelling parameters have been set to $\tau=4\; \mu$eV and $\lambda_{2}=1.6\; \mu$eV.}
+	\caption{Fidelity of FAQUAD protocol in terms of a) systematic error and b) stochastic noise for the detuning. In both cases the tunnelling parameters have been set to $\tau=4\; \mu$eV and $\lambda_{2}=1.6\; \mu$eV.}
 	\label{fig:FAQUAD_DQD_errors}
 \end{figure}
 \newpage
