@@ -140,7 +140,7 @@ if __name__ == '__main__':
 	else:
 		units = ' (s)'
 
-	file_name = 'STA_DQD_2HH_Tunnelling'
+	file_name = 'FAQUAD_DQD_2HH_Tunnelling'
 	message_telegram('DONETE: {} {}x{}. Total time: {:.2f} {}'.format(file_name, n_tau, n_tf, total_time, units))
 	save_figure(fig, file_name, overwrite=True, extension='png', dic='data/')
 	image_telegram('data/' + file_name + '.png')
