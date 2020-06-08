@@ -19,7 +19,7 @@
 %----------------------------------------------------------------------------------------
 
 \documentclass[
-12pt, % The default document font size, options: 10pt, 11pt, 12pt
+11pt, % The default document font size, options: 10pt, 11pt, 12pt
 oneside, % Two side (alternating margins) for binding by default, uncomment to switch to one side
 english, % ngerman for German
 singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespacing
@@ -37,7 +37,9 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \usepackage[utf8]{inputenc} % Required for inputting international characters
 \usepackage[T1]{fontenc} % Output font encoding for international characters
 
-\usepackage{mathpazo} % Use the Palatino font by default
+\usepackage{lmodern}
+%\usepackage{mathpazo} % Use the Palatino font by default
+
 
 \usepackage[backend=bibtex,sorting=none,style=numeric-comp]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
 \DefineBibliographyStrings{english}{%
@@ -47,6 +49,8 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \addbibresource{references.bib} % The filename of the bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
+
+\usepackage{amsmath}
 
 \usepackage{footnotebackref}
 
@@ -65,6 +69,10 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \newcommand{\MYhref}[3][blue]{\href{#2}{\color{#1}{#3}}}
 
 \usepackage{xcolor}
+
+\usepackage{dsfont}
+
+\usepackage{mathrsfs}
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
@@ -173,7 +181,7 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 
 \begin{acknowledgements}
 \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-
+This work was supported by the Fomento a la Investigación UAM Scholarship.
 \end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
@@ -196,7 +204,6 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \textbf{DOSS}& \textbf{D}ouble \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
 \textbf{DQD} & \textbf{D}ouble \textbf{Q}uantum \textbf{D}ot\\
 \textbf{FAQUAD} & \textbf{FA}ast \textbf{Qu}asi \textbf{A}diabatic \textbf{D}ynamics\\
-\textbf{FF} & \textbf{F}ast \textbf{F}orward\\
 \textbf{HH} & \textbf{H}eavy \textbf{H}ole\\
 \textbf{IE} & \textbf{I}nverse \textbf{E}ngineering\\
 \textbf{ODE} & \textbf{O}rdinary \textbf{D}ifferential \textbf{E}quation\\
@@ -205,7 +212,6 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \textbf{SOC} & \textbf{S}pin-\textbf{O}rbit \textbf{C}oupling\\
 \textbf{SOSS}& \textbf{S}ingle \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
 \textbf{STA} & \textbf{S}hortcut \textbf{T}o \textbf{A}diabaticity\\
-\textbf{STIRAP} & \textbf{Sti}mulated \textbf{R}aman \textbf{A}diabatic \textbf{P}assage\\
 \textbf{TQD} & \textbf{T}riple \textbf{Q}uantum \textbf{D}ot
 
 
@@ -234,7 +240,7 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 
 \mainmatter % Begin numeric (1,2,3...) page numbering
 
-\renewcommand{\thechapter}{\Roman{chapter}}
+% \renewcommand{\thechapter}{\Roman{chapter}}
 
 \pagestyle{thesis} % Return the page headers back to the "thesis" style
 
@@ -245,7 +251,8 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \include{Chapters/Chapter2} 
 \include{Chapters/Chapter3}
 \include{Chapters/Chapter4} 
-\include{Chapters/Chapter5} 
+\include{Chapters/Chapter5}
+\include{Chapters/Chapter6} 
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - APPENDICES
