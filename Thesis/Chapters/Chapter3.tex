@@ -1,11 +1,203 @@
 % Chapter Template
 
-\chapter{Adiabatic Passages} % Main chapter title
+\chapter{Shortcuts to Adiabaticity and Robustness} % Main chapter title
 
-\label{sec:Adiabatic_passages} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
+\label{sec:Shortcuts_to_Adiabaticity} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 
 %----------------------------------------------------------------------------------------
 %	SECTION 1
 %----------------------------------------------------------------------------------------
 
+The manipulation of a quantum system has important consequences in quantum computation, since with this we are able to initialize the qubits and perform different quantum gates. One possibility to obtain high fidelities is to prepare the system in the ground state and then adiabatically transfer the state to the target state by modification the Hamiltonian. In order to prevent the excited states leakages at the avoided crossings the change in the Hamiltonian must be infinitesimal, meaning that the manipulation total time tends to infinity. For practical applications this is neither possible nor desirable as we want protocols capable of implementing operations in the qubits as fast as possible. In addition, there is one more problem when working with such long times, and that is that the dephase and decoherence accumulate over time, causing us to move out of the desired state and thus obtaining low fidelities. During the last decade there has been a great proliferation of so calls Shortcut to Adiabaticity (STA) \cite{Chen2010}, which aim not only to speed up the protocols but also to increase the robustness against possible experimental errors. Since adiabatic passages are a widespread method for the manipulation of a system, many different protocol can be classified under the name STA. Each different approach has its own features, some get analytical results while others must be solved numerically, some are focused on minimizing operating time, whereas other have as their main task to obtain the lowest possible sensitivity to noise. This is why a study must first be made to choose the most appropriate technique in each case. Here we will present a summary of the most used techniques, presenting their main advantages and disadvantages.
+
+\section{Counteradiabatic driving}
+The basic idea of counteradiabatic driving (CD), also known as transitionless STA) is the addition of a new term to the original Hamiltonian $H_0(t)$ so that the dynamic of the state follow exactly the adiabatic evolution. This can be seen as a classical system to which we apply an external force in order the obey the dynamics to follow a certain trajectory. There exist two equivalent theoretical approaches for this STA protocol, the formulation of Demirplak and Rice \cite{Demirplak2003}, and the Berry's formulation \cite{Berry2009}. This last one is the one we'll see here. Let's start with the original Hamiltonian, which can be written in a general form as
+\begin{equation}
+	H_0(t)=E_n(t)\sum_n\ket{\phi_n(t)}\bra{\phi_n(t)}\; ,
+\end{equation}
+with $\ket{\phi_n(t)}$ the instant eigenvectors and $E_n(t)$ the corresponding energies. Let the system start at a given instant state $\ket{\phi_n(0)}$, if the driving is slow enough the system will continue in the same state up to a phase
+\begin{equation}
+	\ket{\psi_n(t)}=e^{i\xi_n(t)}\ket{\phi_n(t)}\;.
+\end{equation}
+This phase that the state acquire can be obtained by substituting the above ansatz in the time dependent Schrödinger equation $i\hbar\partial_t\ket{\psi_n(t)}=H_0(t)\ket{\psi_n(t)}$, resulting in
+\begin{equation}
+	i\hbar\left(i\partial_t\xi_n(t)e^{i\xi_n(t)}\ket{\phi_n(t)}+e^{i\xi_n(t)}\partial_t\ket{\phi_n(t)}\right)=E_n(t)e^{i\xi_n(t)}\ket{\phi_n(t)}\; .
+\end{equation}
+Simplifying the phase factors and using the orthonormality of the states at any time $\braket{\phi_n(t)}{\phi_{n'}(t)}=\delta_{nn'}$ we obtain the result
+\begin{equation}
+	\xi_n(t)=-\frac{1}{\hbar}\int_0^tdt'E_n(t')+i\int_0^tdt'\braket{\phi_n(t')}{\partial_t \phi_n(t')}\; .
+	\label{eq:Berry_phase}
+\end{equation}
+The first therm is the typical phase acquire due to the state time evolution and the second term in known as the Berry phase, also known as the geometric phase. We are searching for a time evolution that follows the adiabatic states regardless the speed of the protocol, so the unitary evolution operator is
+\begin{equation}
+	U(t)=\sum_n\ket{\psi_n(t)}\bra{\psi_n(0)}=\sum_ne^{i\xi_n(t)}\ket{\phi_n(t)}\bra{\phi_n(0)}\; .
+\end{equation}
+Using this operator we can compute the Hamiltonian needed using $H(t)=i\hbar \dot{U}U^\dag$,  where the dot means the time derivative. Substituting the operator that we have just obtained we have
+\begin{equation}
+	\begin{split}
+	H(t)&=i\hbar\left(\sum_ni\dot{\xi_n}(t)e^{i\xi_n(t)}\ket{\phi_n(t)}\bra{\phi_n(0)}+e^{i\xi_n(t)}|\dot{\phi}_n(t)\rangle\bra{\phi_n(0)}\right)\\
+	&\phantom{=i\hbar}\times\left(\sum_{n'}e^{-i\xi_{n'}(t)}\ket{\phi_{n'}(0)}\bra{\phi_{n'}(t)}\right)\\
+	&=i\hbar\sum_ne^{i\xi_n(t)}\left[i\left(-\frac{1}{\hbar}E_n(t)+i\bra{\phi_n(t)}\dot{\phi}_n(t)\rangle\right)\ket{\phi_n(t)}+|\dot{\phi}_n(t)\rangle\right]\\
+	&\phantom{=i\hbar}\times\sum_{n'}e^{-i\xi_{n'}(t)}\delta_{nn'}\bra{\phi_{n'}(t)}\\
+	&=\sum_nE_n(t)\ket{\phi_n(t)}\bra{\phi_n(t)}+i\hbar\sum_n\left(|\dot{\phi}_n(t)\rangle\bra{\phi_n(t)}-\bra{\phi_n(t)}\dot{\phi}_n(t)\rangle\ket{\phi_n(t)}\bra{\phi_n(t)}\right)\; ,
+	\end{split}
+\end{equation}
+where the first term in the last line corresponds to the original Hamiltonian and the second term is the new counterterm Hamiltonian that we must add $H(t)=H_0(t)+H_{\text{CD}}(t)$ to ensure that the initial state follows the adiabatic path.\\
+
+With this scheme we have a great deal of freedom to choose the evolution of the parameters, the simplest choice is a polynomial interpolation fulfilling the boundary conditions given by the initial and final target stats. However, in order the use CD we must know all the eigenstates of the system, what can be really difficult in a  many bodies system, this is one of the main disadvantages of the scheme. It may also be the case that the counterterm Hamiltonian include term which are in principle not controllable and in general not possible to produce in a given experimental setup. Lot of effort is being put into solving these kind of problems \cite{Ibanez2011,Chen2017,Petiziol2018,Baksic2016}.
+
 \section{FAQUAD}
+Let $\ket{\phi_1(t)}$ and $\ket{\phi_2(t)}$ the instant basis for a two level system with energies $E_1$ and $E_2$ respectively. Initialising the system in one of these states, $\ket{\phi_1}$ for instance, the evolution will maintain in this instant state, up to a phase, if the adiabatic condition is fulfilled \cite{Schiff1968}
+\begin{equation}
+	\hbar\abs{\frac{\braket{\phi_1(t)}{\partial_t\phi_2(t)}}{E_1(t)-E_2(t)}}=c\ll 1\;.
+	\label{eq:adiabatic_condition}
+\end{equation}
+In order to simplify the numerator we can start with the time independent Schrödinger equation which defines the instant eigenstate $\ket{\phi_2(t)}$. If we derivate the expression and multiply by $\bra{\phi_1(t)}$ we can obtain
+\begin{equation}
+	\begin{split}
+	H\ket{\phi_2}&=E_2\ket{\phi_2}\\
+	(\partial_t H)\ket{\phi_2}+H\ket{\partial_t\phi_2}&=(\partial_t E_2)\ket{\phi_2}+E_2\ket{\partial_t\phi_2}\\
+	\bra{\phi_1}\partial_t H\ket{\phi_2}+\bra{\phi_1}H\ket{\partial_t \phi_2}&=(\partial_t E_2)\braket{\phi_1}{\phi_2}+E_2\braket{\phi_1}{\partial_t \phi_2}\\
+	\bra{\phi_1}\partial_t H\ket{\phi_2}+E_1\braket{\phi_1}{\partial_t\phi_2}&=E_2\braket{\phi_1}{\partial_t\phi_2}\\
+	\braket{\phi_1}{\partial_t \phi_2}&=\frac{\bra{\phi_1}\partial H\ket{\phi_2}}{E_2-E_1}\; .
+	\end{split}
+\end{equation}
+In the third step we have used the orthogonality if the adiabatic states $\braket{\phi_i}{\phi_j}=\delta_{ij}$. So the Hamiltonian $H(t)$, the instant energies $E_i(t)$ and the adiabatic states $\phi_i(t)$ depend on the time, in order to obtain nicer expressions in the above equation we've relaxed the notation by dropping off all the explicit dependences of time. Using this result in Eq.~(\ref{eq:adiabatic_condition}) we obtain a reformulated adiabatic condition
+\begin{equation}
+	\hbar\abs{\frac{\bra{\phi_1(t)}\partial_t H(t)\ket{\phi_2(t)}}{\left[E_1(t)-E_2(t)\right]^2}}=c\ll 1\; .
+\end{equation}
+This was the case of a two level system, the extension for a multi-level system is straightforward
+\begin{equation}
+	\hbar\sum_{n\neq i}\abs{\frac{\bra{\phi_i(t)}\partial_t H(t)\ket{\phi_n(t)}}{\left[E_i(t)-E_n(t)\right]^2}}=c\ll 1\; ,
+	\label{eq:multilevel_adiabatic_condition}
+\end{equation}
+where the index $i$ denotes the state in which we initialize the system. Looking at this equation we observer that the larger the gap between energies the faster we can go from the initial to the final state maintaining the adiabatic condition. If the gap is too tight the evolution must be slow enough so the dynamics follow the adiabatic states. This is the heart of the fast quasi-adiabatic (FAQUAD) protocol \cite{MartinezGaraot2015}, when the states are far away in energies the protocol can be as fast as possible, but it must slow down when we're approaching to a avoided crossing in which the energies are close to each other. In a simple scenario we can assume that the adiabatic process is driven by just one parameter $\lambda(t)$. Using the chain rule we can write $\partial_t=\partial_\lambda \dot{\lambda}$ and substituting in Eq.~(\ref{eq:multilevel_adiabatic_condition}) we can obtain the variation of the parameters
+\begin{equation}
+	\dot{\lambda}=\pm \frac{c}{\hbar}\left(\sum_{n\neq i}\abs{\frac{\bra{\phi_i(\lambda)}\partial_\lambda H(\lambda)\ket{\phi_n(\lambda)}}{\left[E_i(\lambda)-E_n(\lambda)\right]^2}}\right)^{-1}\; ,
+	\label{eq:parameter_ODE}
+\end{equation}
+where the sign $\pm$ correspond to a monotonous increase/decrease of the parameter. It is usual to work with the rescales time $s\equiv t/t_f$ and redefine the adiabatic parameter as $\tilde{c}\equiv ct_f$ with $t_f$ the total time of the protocol. Setting $\tilde{c}$ constant over all times we can obtain its value computing the following integral which is easily derivate from Eq.~(\ref{eq:parameter_ODE})
+\begin{equation}
+	\int_0^1 ds\tilde{c}=\tilde{c}=\int_{\lambda(t=0)}^{\lambda(t=t_f)}d\lambda \left(\sum_{n\neq i}\abs{\frac{\bra{\phi_i(\lambda)}\partial_\lambda H(\lambda)\ket{\phi_n(\lambda)}}{\left[E_i(\lambda)-E_n(\lambda)\right]^2}}\right)\; ,ç
+	\label{eq:c_tilde_deff}
+\end{equation}
+what can be done analytically or numerically. Here we can see that $\tilde{c}$ is independent of the final time, what means that the adiabatic parameter $c\propto 1/t_f$. This is something we have predicted, the longer the protocol, the more adiabatic the process. Let's introduce a now notation for parameter in terms of the rescaled time $\tilde{\lambda}(s)\equiv \lambda(s t_f)$ and it's derivative denote by $\tilde{\lambda}'(s)\equiv t_f\dot{\lambda}(t)$. With this new convention we can rewrite Eq.~(\ref{eq:parameter_ODE}) as
+\begin{equation}
+\tilde{\lambda}'(s)=\pm \frac{\tilde{c}}{\hbar}\left(\sum_{n\neq i}\abs{\frac{\bra{\phi_i(\tilde{\lambda})}\partial_{\tilde{\lambda}} H(\tilde{\lambda})\ket{\phi_n(\tilde{\lambda})}}{\left[E_i(\tilde{\lambda})-E_n(\tilde{\lambda})\right]^2}}\right)^{-1}\; .
+\label{eq:parameter_ODE_2}
+\end{equation}
+Once we compute the value for $\tilde{c}$, we can numerically solve the above ordinal differential equation (ODE) an obtain the evolution for the parameter $\tilde{\lambda}(s)$. If the adiabatic condition is verified $\tilde{c}/t_f\ll 1$ them the wave function that describes the system can be expanded using adiabatic perturbation theory as
+\begin{equation}
+	\ket{\Psi(t)}=\sum_na_n(t)e^{i\xi_n(t)}\ket{\phi_n(t)}\; ,
+	\label{eq:adiabatic_approx_1}
+\end{equation}
+where we phase is exactly the same than the one described in Eq.~(\ref{eq:Berry_phase}). Introducing Eq.~(\ref{eq:adiabatic_approx_1}) in the time dependent Schrödinger equation we obtain a system of ODEs for the amplitude of each instant eigenvector
+\begin{equation}
+	\begin{split}
+	i\hbar\left[\sum_k\dot{a}_k(t)e^{i\xi_k(t)}\ket{\phi_k(t)}+ia_k(t)\dot{\xi}_k(t)e^{i\xi_k(t)}\ket{\phi_k(t)}\right.&\\
+	\left.+a_k(t)e^{i\xi_k(t)}|\dot{\phi}_k(t)\rangle\right]&=\sum_k a_k(t)e^{i\xi_k(t)E_k\ket{\phi_k(t)}}
+	\end{split}
+\end{equation}
+what can be easily simplified to the expression
+\begin{equation}
+	\sum_k \dot{a}_k(t)e^{i\xi_k(t)}\ket{\phi_k(t)}=-\sum_ka_k(t)e^{i\xi_k(t)}|\dot{\phi}_k(t)\rangle\; .
+\end{equation}
+Multiplying both sides of the equation by $\ket{\phi_n(t)}$ with $n\neq k$, and imposing $\bra{\phi_k}\dot{\phi}_k(t)\rangle=0$ we obtain the equation
+\begin{equation}
+	\dot{a}_n(t)=-\sum_{k\neq n}a_k(t)e^{iW_{nk}(t)}\bra{\phi_n(t)}\dot{\phi}_k(t)\rangle\; ,
+	\label{eq:EDO_coefficient}
+\end{equation}
+where we have defined the phase $W_{nk}\equiv \int_0^t\omega_{nk}(t')dt$ with
+\begin{equation}
+	\omega_{nk}(t)\equiv \frac{1}{\hbar}[E_n(t)-E_k(t)]\; .
+\end{equation}
+Integrating Eq.~(\ref{eq:EDO_coefficient}) we have
+\begin{equation}
+	a_n(t)-a_n(0)=-\sum_{k\neq n}\int_0^te^{iW_{nk}(t')}\bra{\phi_n(t')}\dot{\phi}_k(t')\rangle a_k(t') dt'\; .
+\end{equation}
+We initialise the system in one of the instant states $\ket{\Psi(t=0)}=\ket{\phi_i(t=0)}$, so at first order in adiabatic perturbation theory we can set $a_k(t')=\delta_{ki}$. Using this in the above equation we obtain
+\begin{equation}
+	a_n^{(1)}(t)=-\int_0^te^{iW_{ni}(t')}\bra{\phi_n(t')}\dot{\phi}_i(t')\rangle dt'\; ,
+	\label{eq:almost_done}
+\end{equation}
+which should satisfy $\abs{a_n^{(1)}(t)}\ll 1$ for an adiabatic evolution. We can compute this integral for FAQUAD using Eq.~(\ref{eq:multilevel_adiabatic_condition}) we can write
+\begin{equation}
+	\bra{\phi_n(t)}\dot{\phi}_i\rangle=c_nr\omega_{ni}(t)\; .
+\end{equation}
+with $r\equiv\operatorname{sgn}[\bra{\phi_n(t)}\dot{\phi}_i(t)\omega_{ni}]$ and $c=\sum_{n\neq i}c_n$. Using this in Eq.~(\ref{eq:almost_done}) we obtain the final result of
+\begin{equation}
+	a_n^{(1)}(t)=-c_nr\int_0^t\omega_{ni}(t')e^{iW_{ni}(t')}dt'=ic_nr\left(e^{iW_{ni}(t)}-1\right)\; .
+\end{equation}
+With this we can compute the population of the $n$-state at first order as
+\begin{equation}
+	\abs{\braket{\phi_n(t)}{\Psi(t)}}^2=\abs{a^{(1)}_n(t)}^2=2c_n^2\left[1-\cos(W_{ni}(t))\right]\; .
+	\label{eq:amplitudes_adiabatic}
+\end{equation}
+The upper limit for the state is given by
+\begin{equation}
+	\abs{a_n^{(1)}(t)}\leq 4c^2\; .
+\end{equation}
+Defining the fidelity as the probability of measuring the initial eigenvector at the final time $\mathcal{F}\equiv \abs{\braket{\phi_i(t=t_f)}{\Psi(t=t_f)}}^2$, we can use Eq.~(\ref{eq:amplitudes_adiabatic}) to obtain the expression
+\begin{equation}
+	\mathcal{F}^{(1)}=1-\sum_{n\neq i}\abs{a_n^{(1)}(t_f)}^2=1-2\sum_{n\neq i}c_n^2\left[1-\cos(W_{ni}(t_f))\right]\; .
+	\label{eq:FAQUAD_fidelity}
+\end{equation}
+With this we can extract that in a system with $N$ levels the fidelity, in terms of the final time, presents an oscillatory behaviour governed by $N-1$ frequencies given by the equation
+\begin{equation}
+	\nu_{ni}=\frac{1}{2\pi\hbar}\int_0^1\abs{E_n(s)-E_i(s)}ds\; .
+	\label{eq:FAQUAD_frecuencies}
+\end{equation}
+
+One of the strength of FAQUAD is that we can compute the evolution of the parameter $\lambda(t)$ without the need of a analytical solution for the eigenstates and eigenenergies of the system. This is really important if we want to use this method in a multi-level Hamiltonian whose structure is difficult enough to solve the equations analytically. One more advantage is that we have not included additional terms to the Hamiltonian, in contrast to what we have seen with the CD approach. Solving Eq.~(\ref{eq:parameter_ODE_2}) we compute the driving parameter $\tilde{\lambda}(s)$ in terms of the scaled time $s$, without specifying a value for $t_f$. The equation only needs to be solve once and can be used for any total time, saving time of computation. One of the main weaknesses of FAQUAD is that, like CD, total system information (eigenstates and eigenvectors) is needed, what may be difficult for many-bodies systems. To alleviate this we can used the local adiabatic approach \cite{Roland2002}, which change Eq.~(\ref{eq:parameter_ODE_2}) in favour of
+\begin{equation}
+\tilde{\lambda}'(s)=\pm \frac{\tilde{c}}{\hbar}\left(\sum_{n\neq i}\abs{\frac{\partial_{\tilde{\lambda}}[E_i(\tilde{\lambda})-E_n(\tilde{\lambda})]} {\left[E_i(\tilde{\lambda})-E_n(\tilde{\lambda})\right]^2}}\right)^{-1}\; ,
+\end{equation}
+that only needs the eigenenergies of the system, reducing drastically the amount of information needed. However, as one would expect, the results obtained produce lower fidelity than when using FAQUAD.
+
+\section{Robustness}
+The existence of errors in the devices and the appearance of noise in these is something difficult to deal with when conducting the experiments, so it is important to take it into account when running the numerical simulations. These sources of error that lead to lower fidelity can be grouped into two main categories known as systematic errors and stochastic errors. The first one correspond to a bad calibration of the devices yielding values for the system parameters that systematically deviate from those imposed by the STA schemes. Letting $\hat{\mathcal{H}}_0(t)$ be the ideal Hamiltonian, this systematic effects can be taken into account by adding a new term to the total Hamiltonian
+\begin{equation}
+	\hat{\mathcal{H}}_T(t)=\hat{\mathcal{H}}_0(t)+\delta_0\hat{\mathcal{H}}_1(t)\; ,
+\end{equation}
+where $\hat{\mathcal{H}}_1(t)$ is the part of the original Hamiltonian contributing from the parameter in which we are interested. The other possible source of error is the existence of noise in the experimental step-up what can be simulated with the Schrödinger equation that depends on a white noise $\zeta(t)$ and the parameters that suffer from the noise included in $\hat{\mathcal{H}}_2$. In the Stratonovich sense this stochastic equation is written as
+\begin{equation}
+	i\hbar \partial_t\ket{\Psi(t)}=(\hat{\mathcal{H}}_0+\gamma_0\hat{\mathcal{H}}_2\zeta(t))\ket{\Psi(t)}\; .
+\end{equation}
+The function $\zeta(t)$ is the derivative of a Brownian motion, and the conditions that must fulfil to represent a white noise is to have zero mean value $\expval{\zeta(t)}=0$ and the values at different times must be uncorrelated $\expval{\zeta(t)\zeta(t')}=\delta(t-t')$. The dynamical equation for the stochastic density matrix can be obtained from the above equation as
+\begin{equation}
+	\frac{d}{dt}\rho_\zeta=-\frac{i}{\hbar}[\hat{\mathcal{H}}_0,\rho_\zeta]-\frac{i\gamma_0}{\hbar}[\hat{\mathcal{H}}_2,\zeta\rho_\zeta]\; .
+	\label{eq:stochastic_dynamics}
+\end{equation}
+Averaging over different realizations the equation is written as
+\begin{equation}
+	\frac{d}{dt}\rho=-\frac{i}{\hbar}[\hat{\mathcal{H}}_0,\rho]-\frac{i\gamma_0}{\hbar}[\hat{\mathcal{H}}_2,\expval{\zeta\rho_\zeta}]\; ,
+	\label{eq:almost_dynamic_eq}
+\end{equation}
+where we have defined the mean density matrix as $\rho(t)=\expval{\rho_\zeta(t)}$. In order to simplify the expected value we can use the Navikov's theorem which reads
+\begin{equation}
+	\expval{\zeta(t)\mathscr{F}[\zeta(t)]}=\int_0^tds\expval{\zeta(t)\zeta(s)}\expval{\frac{\partial\mathscr{F}[\zeta]}{\partial\zeta(s)}}
+\end{equation}
+with $\mathscr{F}[\zeta(t)]$ some function that depends on the noise. Using the fact that we are dealing with a white noise the above equation is simplified as\footnote{Recall that in the Stratonovich interpretation $\int_0^\infty dt\delta (t)=1/2$.}
+\begin{equation}
+	\expval{\zeta(t)\mathscr{F}[\zeta(t)]}=\frac{1}{2}\expval{\frac{\partial\mathscr{F}[\zeta]}{\partial \zeta(s)}}_{s=t}\; .
+	\label{eq:Navikovs_result}
+\end{equation}
+Integrating Eq~(\ref{eq:stochastic_dynamics}) we obtain the expression
+\begin{equation}
+	\rho_\zeta=-\frac{i}{\hbar}\int_0^tds[\hat{\mathcal{H}}_0(s),\rho_\zeta(s)]-\frac{i\gamma_0}{\hbar}\int_0^tds[\hat{\mathcal{H}}_2,\rho_\zeta(s)]\zeta(s)\; ,
+\end{equation}
+and with the substitution $\mathscr{F}[\zeta(t)]=\rho_\zeta(t)$ and using this above integral in Eq.~(\ref{eq:Navikovs_result}) we have
+\begin{equation}
+	\expval{\zeta\rho_\zeta}=-\frac{i\gamma_0}{2\hbar}[\hat{\mathcal{H}}_2(t),\rho(t)]\; .
+\end{equation}
+Inserting this result in Eq.~(\ref{eq:almost_dynamic_eq}) we obtain finally the matrix differential equation that governs the dynamics of the density matrix under a stochastic white noise
+\begin{equation}
+	\frac{d}{dt}\rho=-\frac{i}{\hbar}[\hat{\mathcal{H}}_0,\rho]-\frac{\gamma_0^2}{2\hbar^2}[\hat{\mathcal{H}}_2,[\hat{\mathcal{H}}_2,\rho]]\; .
+\end{equation}
+This expression is reminiscent of Lindblad's master equation, with the difference that here we are taking into account amplitude-noise effects and not decoherence and relaxation.
+
+
+
+
+
+
