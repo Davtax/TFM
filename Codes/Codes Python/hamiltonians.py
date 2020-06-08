@@ -4,7 +4,7 @@ In this file is all the functions that create the Hamiltonians for all the syste
 import numpy as np
 
 
-def hamiltonian_3QD_1HH(e1, e2, e3, EZ, tN12, tN23, tF12, tF23):
+def hamiltonian_3QD_1HH(e1, e2, e3, EZ, tN12, tN23, tF12, tF23, phase):
 	"""
 	Creation of the Hamiltonian in a matrix form representing the system of 3 Quantum Dots populated with only 1 Heavy Hole. The parameters for the
 	detuning of each dot is controlled individually, as well as the tunnellings. The magnetic field is common for the hole QD array. The basis used is
@@ -23,12 +23,12 @@ def hamiltonian_3QD_1HH(e1, e2, e3, EZ, tN12, tN23, tF12, tF23):
 	matrix = np.zeros([6, 6], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
 
 	# Fill of the elements of the Hamiltonian, row by row
-	matrix[0, :] = [e1 + EZ / 2, 0, -tN12, -1j * tF12, 0, 0]
-	matrix[1, :] = [0, e1 - EZ / 2, -1j * tF12, -tN12, 0, 0]
-	matrix[2, :] = [-tN12, 1j * tF12, e2 + EZ / 2, 0, -tN23, 1j * tF23]
-	matrix[3, :] = [1j * tF12, -tN12, 0, e2 - EZ / 2, 1j * tF23, -tN23]
-	matrix[4, :] = [0, 0, -tN23, -1j * tF23, e3 + EZ / 2, 0]
-	matrix[5, :] = [0, 0, -1j * tF23, -tN23, 0, e3 - EZ / 2]
+	matrix[0, :] = [e1 + EZ / 2, 0, -tN12, tF12*np.exp(1j*phase), 0, 0]
+	matrix[1, :] = [0, e1 - EZ / 2, tF12*np.exp(1j*phase), -tN12, 0, 0]
+	matrix[2, :] = [-tN12, tF12*np.exp(-1j*phase), e2 + EZ / 2, 0, -tN23, tF23*np.exp(1j*phase)]
+	matrix[3, :] = [tF12*np.exp(-1j*phase), -tN12, 0, e2 - EZ / 2, tF23*np.exp(1j*phase), -tN23]
+	matrix[4, :] = [0, 0, -tN23, tF23*np.exp(-1j*phase), e3 + EZ / 2, 0]
+	matrix[5, :] = [0, 0, tF23*np.exp(-1j*phase), -tN23, 0, e3 - EZ / 2]
 
 	return matrix
 
@@ -79,7 +79,17 @@ def hamiltonian_2QD_1HH_Lowest(epsilon, u, EZ, tau, l1, l2, error=0):
 	return matrix
 
 
-def hamiltonian_2QD_1HH_All(epsilon, u, EZ, tau, l1, l2):
+def hamiltonian_2QD_1HH_All(epsilon, u, EZ, tN, tF):
+	matrix = np.zeros([5, 5], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
+
+	matrix[0, :] = [EZ, 0, 0, 0, tF]
+	matrix[1, :] = [0, 0, 0, 0, -tN]
+	matrix[2, :] = [0, 0, 0, 0, tN]
+	matrix[3, :] = [0, 0, 0, -EZ, -tF]
+	matrix[4, :] = [tF, -tN, tN, -tF, u + epsilon]
+	return matrix
+
+def hamiltonian_2QD_1HH_All_molecular(epsilon, u, EZ, tN, tF):
 	"""
 	Creation of the Hamiltonian for all the states, except the double occupation singlet in the left quantum dot, in a system of a double quantum dot
 	populated with 2 heavy holes. The basis used is: [(↑,↑), (↑,↓), (↓,↑), (↓,↓), (0,↑↓)]
@@ -94,11 +104,11 @@ def hamiltonian_2QD_1HH_All(epsilon, u, EZ, tau, l1, l2):
 	"""
 	matrix = np.zeros([5, 5], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
 
-	matrix[0, :] = [EZ, 0, 0, 0, 0]
-	matrix[1, :] = [0, 0, 0, 0, -tau]
-	matrix[2, :] = [0, 0, 0, 0, tau]
-	matrix[3, :] = [0, 0, 0, -EZ, 0]
-	matrix[4, :] = [0, -tau, tau, 0, u + epsilon]
+	matrix[0, :] = [EZ, 0, 0, tF, 0]
+	matrix[1, :] = [0, 0, 0, 0, 0]
+	matrix[2, :] = [0, 0, -EZ, -tF, 0]
+	matrix[3, :] = [tF, 0, -tF, u+epsilon, -np.sqrt(2)*tN]
+	matrix[4, :] = [0, 0, 0, -np.sqrt(2)*tN, 0]
 	return matrix
 
 

@@ -10,6 +10,8 @@ from scipy.constants import h, e
 import os
 from scipy.signal import savgol_filter, medfilt
 from qutip.operators import jmat
+from qutip.mesolve import mesolve
+from qutip.solver import Options
 
 hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9  # Value for the reduced Plank's constant [ueV * ns]
 
@@ -244,6 +246,33 @@ def solve_system_unpack(pack):
 	return [pack[0], solve_system(*pack[1:-1], prob=True, **extra_param)[:2]]
 
 
+def solve_system_unpack_qutip(pack, args=None, options=None, dim=5):
+	"""
+	These functions are used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
+	process and unpack the parameters given to solve the system. By default, the value for hbar is 1, and the absolute and relative errors are
+	10^{-8} and 10^{-6} respectively.
+	:param pack: (list) List with the following parameters: [index of the parallel computation, time, density0, parameters, hamiltonian]. To pass the
+	values of default parameters, all of them must be in the sixth element of the list as a dictionary, e.g {'hbar': 1, 'atol': 1e-8}.
+	:return: (list) list with the index of the computation al the solution of the system.
+	"""
+	i, H, psi0, times = pack[:4]
+
+	states = np.zeros([dim, len(times)], dtype=complex)
+
+	if args is None:
+		args = {}
+
+	if options is None:
+		options = Options()
+
+	result = mesolve(H, psi0, times, args=args, options=options)
+
+	for j in range(0, len(times)):
+		states[:, j] = result.states[j].full()[:, 0]
+
+	return [i, states]
+
+
 def sort_solution(data):
 	"""
 	Function to sort the data obtained for a parallel computation
@@ -467,7 +496,7 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 			index_max = np.where(sig * x_sol > sig * x_vec[-1])[0][0]  # Save the first index in which the final value is obtained
 			reached = True  # Exit the while loop
 		elif not method_1:
-			print('The parameter may not reached the maximum value, verify it.\nConsider use the method 1.')
+			print('The parameter may not reached the maximum value, verify it.\nConsider to use the method 1.')
 			index_max = len(s) - 1
 			reached = True
 		else:  # If the final value is not yet reached
@@ -479,13 +508,13 @@ def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar
 			return ()
 
 	s = np.linspace(0, 1, index_max + 1)  # Compute a new vector that goes exactly up to the unity
-	x_sol = interp1d(s, x_sol[:index_max + 1], kind='quadratic')  # Interpolate and contract the data to reach the final value at s=1
+	x_sol = x_sol[:index_max + 1]
 	# We must use index_max + 1 in order to get also the value that fulfill the condition x_vex > limit
 
 	return s, x_sol
 
 
-def save_data(name, data, overwrite=None, index=0, ask=True):
+def save_data(name, data, overwrite=None, index=0, ask=True, temp=True):
 	"""
 	Function to save the data in a numpy file. All the files are saved in the folder "data", a sub-folder of "Codes Python". This function has a
 	protection for not overwriting and save a temp file if the overwriting question is not asked.
@@ -500,10 +529,10 @@ def save_data(name, data, overwrite=None, index=0, ask=True):
 	if index != 0:  # If an index is specified
 		file_dic += ' (' + str(index) + ')'  # Include the index in the same
 
-	np.save(file_dic + '_temp', data)  # Save a temp file to prevent an error during the question
-
 	if overwrite is None:  # If the user does not give a preference for the overwriting
 		if os.path.isfile(file_dic + '.npy'):  # If the file exists in the folder
+			if temp:
+				np.save(file_dic + '_temp', data)  # Save a temp file to prevent an error during the question
 			if ask:
 				overwrite = question_overwrite(file_dic + '.npy')  # The function will ask if the user want to overwrite the file
 			else:
@@ -516,9 +545,10 @@ def save_data(name, data, overwrite=None, index=0, ask=True):
 	else:  # If the user does not want to over write, a copy is saved
 		# The copy will include the typical (1) at the end of the name, if this already exist then (2) without asking. If the file also exist then (3)
 		# and so on until an empty number is reached.
-		save_data(name, data, index=index + 1, ask=False)
+		save_data(name, data, index=index + 1, ask=False, temp=False)
 
-	os.remove(file_dic + '_temp.npy')  # If the file is correctly saved the temp file is removed
+	if os.path.isfile(file_dic + '_temp.npy'):
+		os.remove(file_dic + '_temp.npy')  # If the file is correctly saved the temp file is removed
 
 
 def compute_limits(hamiltonian, parameters, limit_1, limit_2, state_1, state_2, instant_state, x_vec, y_vec, index_x, index_y, window=None, pol=3,
