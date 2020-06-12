@@ -42,9 +42,9 @@ u = 2000  # Intradot interaction (ueV)
 lim = 10 ** 4
 eps_vector_temp = np.linspace(-lim, lim, 2 ** 15) * ET - u
 
-n_tau = 50
+n_tau = 5
 tau_vec = np.linspace(0.1, 4, n_tau, endpoint=True)
-n_tf = 300
+n_tf = 30
 tf_vec = np.linspace(0.1, 60, n_tf, endpoint=True)
 
 l2_vector = tau_vec * 0.4

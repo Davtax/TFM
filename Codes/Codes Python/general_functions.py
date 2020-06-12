@@ -232,11 +232,10 @@ def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False
 def solve_system_unpack(pack):
 	"""
 	These functions are used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
-	process and unpack the parameters given to solve the system. By default, the value for hbar is 1, and the absolute and relative errors are
-	10^{-8} and 10^{-6} respectively.
+	process and unpack the parameters given to solve the system.
 	:param pack: (list) List with the following parameters: [index of the parallel computation, time, density0, parameters, hamiltonian]. To pass the
 	values of default parameters, all of them must be in the sixth element of the list as a dictionary, e.g {'hbar': 1, 'atol': 1e-8}.
-	:return: (list) list with the index of the computation al the solution of the system.
+	:return: (list) list with the index of the computation and the solution of the system.
 	"""
 
 	if len(pack) > 5:
@@ -246,7 +245,7 @@ def solve_system_unpack(pack):
 	return [pack[0], solve_system(*pack[1:-1], prob=True, **extra_param)[:2]]
 
 
-def solve_system_unpack_qutip(pack, args=None, options=None, dim=5):
+def solve_system_unpack_qutip(pack):
 	"""
 	These functions are used for the parallel computing, where we need to call the function with just one variable. Here we extract the index of the
 	process and unpack the parameters given to solve the system. By default, the value for hbar is 1, and the absolute and relative errors are
@@ -257,18 +256,45 @@ def solve_system_unpack_qutip(pack, args=None, options=None, dim=5):
 	"""
 	i, H, psi0, times = pack[:4]
 
-	states = np.zeros([dim, len(times)], dtype=complex)
+	if len(pack) > 4:
+		extra_params = pack[-1]
+	else:
+		extra_params = {}
 
-	if args is None:
-		args = {}
+	if 'args' not in extra_params:
+		extra_params['args'] = {}
 
-	if options is None:
-		options = Options()
+	if 'options' not in extra_params:
+		extra_params['options'] = Options()
 
-	result = mesolve(H, psi0, times, args=args, options=options)
+	if 'dim' not in extra_params:
+		extra_params['dim'] = 3
 
-	for j in range(0, len(times)):
-		states[:, j] = result.states[j].full()[:, 0]
+	if 'only_final' not in extra_params:
+		extra_params['only_final'] = False
+
+	if 'c_ops' not in extra_params:
+		extra_params['c_ops'] = None
+
+	result = mesolve(H, psi0, times, args=extra_params['args'], options=extra_params['options'], c_ops=extra_params['c_ops'])
+
+	if extra_params['only_final']:
+		states = np.zeros([extra_params['dim']], dtype=complex)
+		if extra_params['c_ops'] is None:
+			states[:] = result.states[-1].full()[:, 0]
+		else:
+			prob = np.diag(result.states[-1].full())
+			phases = np.exp(1j * np.angle(result.states[-1].full())[0, :])
+			states[:] = np.sqrt(prob) * phases
+	else:
+		states = np.zeros([extra_params['dim'], len(times)], dtype=complex)
+		for j in range(0, len(times)):
+			if extra_params['c_ops'] is None:
+				states[:, j] = result.states[j].full()[:, 0]
+			else:
+				prob = np.diag(result.states[j].full())
+				phases = np.exp(1j * np.angle(result.states[j].full())[0, :])
+				states[:, j] = np.sqrt(prob) * phases
 
 	return [i, states]
 
@@ -418,6 +444,7 @@ def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hba
 	:param energies: (numpy.matrix) Matrix with the D instant eigenenergies of the system. The dimension is [N x D]
 	:param initial_state: (int) Index for the initial state in which we begin the protocol
 	:param hbar: (float) Value for hbar
+	:param partial_Hamiltonian: (numpy.matrix) Matrix with the derivative of the Hamiltonian
 	:return: (list) List with the factors computed and the value of c_tilde.
 	"""
 	n, dim = np.shape(energies)  # Extract the number of steps for the independent variable, and the number of states
@@ -662,7 +689,6 @@ def compute_period(x_sol, hamiltonian, parameters, hbar, index, state):
 	for i in range(0, len(index)):  # Iterate over all the independent variables to include in the list of parameters
 		parameters[index[i]] = x_sol_list[i]  # Include the vec of independent variables
 
-	# TODO: For the moment we can only have one independent variable
 	h_matrix = create_hypermatrix(parameters, hamiltonian)  # Construct the hypermatrix of the hamiltonian
 	energies = np.linalg.eigvalsh(h_matrix)  # Extract only the instant eigenenergies of the Hamiltonian
 
@@ -680,3 +706,23 @@ def compute_period(x_sol, hamiltonian, parameters, hbar, index, state):
 	t = 2 * np.pi / phi  # Compute the period
 
 	return t
+
+
+def generalized_Pauli_Matrices(d):
+	if d == 2:
+		matrices = [np.array([[1, 0], [0, -1]])]
+
+	else:
+		matrices = generalized_Pauli_Matrices(d - 1)
+
+		for i in range(len(matrices)):
+			temp = matrices[i]
+			temp = np.vstack((temp, np.zeros(d - 1)))
+			temp = np.hstack((temp, np.zeros((d, 1))))
+			matrices[i] = temp
+		temp = np.eye(d)
+		temp[-1, -1] = (1 - d)
+		temp *= np.sqrt(2 / (d * (d - 1)))
+		matrices.append(temp)
+
+	return matrices

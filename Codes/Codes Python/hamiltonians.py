@@ -23,12 +23,12 @@ def hamiltonian_3QD_1HH(e1, e2, e3, EZ, tN12, tN23, tF12, tF23, phase):
 	matrix = np.zeros([6, 6], dtype=complex)  # Create a matrix with the correct dimensions and complex elements
 
 	# Fill of the elements of the Hamiltonian, row by row
-	matrix[0, :] = [e1 + EZ / 2, 0, -tN12, tF12*np.exp(1j*phase), 0, 0]
-	matrix[1, :] = [0, e1 - EZ / 2, tF12*np.exp(1j*phase), -tN12, 0, 0]
-	matrix[2, :] = [-tN12, tF12*np.exp(-1j*phase), e2 + EZ / 2, 0, -tN23, tF23*np.exp(1j*phase)]
-	matrix[3, :] = [tF12*np.exp(-1j*phase), -tN12, 0, e2 - EZ / 2, tF23*np.exp(1j*phase), -tN23]
-	matrix[4, :] = [0, 0, -tN23, tF23*np.exp(-1j*phase), e3 + EZ / 2, 0]
-	matrix[5, :] = [0, 0, tF23*np.exp(-1j*phase), -tN23, 0, e3 - EZ / 2]
+	matrix[0, :] = [e1 + EZ / 2, 0, -tN12, -tF12*np.exp(1j*phase), 0, 0]
+	matrix[1, :] = [0, e1 - EZ / 2, -tF12*np.exp(1j*phase), -tN12, 0, 0]
+	matrix[2, :] = [-tN12, -tF12*np.exp(-1j*phase), e2 + EZ / 2, 0, -tN23, -tF23*np.exp(1j*phase)]
+	matrix[3, :] = [-tF12*np.exp(-1j*phase), -tN12, 0, e2 - EZ / 2, -tF23*np.exp(1j*phase), -tN23]
+	matrix[4, :] = [0, 0, -tN23, -tF23*np.exp(-1j*phase), e3 + EZ / 2, 0]
+	matrix[5, :] = [0, 0, -tF23*np.exp(-1j*phase), -tN23, 0, e3 - EZ / 2]
 
 	return matrix
 

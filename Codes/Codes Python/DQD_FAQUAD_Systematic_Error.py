@@ -38,10 +38,10 @@ lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters_temp, limit
 n_eps = 2 ** 15 + 1  # This number of elements is required for the romb method of integration used below
 eps_vector = np.linspace(lim_T[0], lim_S[0], n_eps)
 
-n_tf = 300
+n_tf = 30
 tf_vec = np.linspace(0.1, 25, n_tf, endpoint=True)
 
-n_error = 50+1
+n_error = 5+1
 error_vector = np.linspace(-1, 1, n_error, endpoint=True) * 1e-2
 
 density0 = np.zeros([3, 3], dtype=complex)  # Initialize the variable to save the density matrix

@@ -4,6 +4,7 @@ In this file we will include all the functions that I made to customize the figu
 import os.path
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from general_functions import question_overwrite
+import numpy as np
 
 
 def save_figure(fig, name, overwrite=None, extension='eps', dic='notes'):
@@ -81,8 +82,12 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 	if lines_bool:  # If the function can change the lines
 		lines = ax.lines  # Extract the lines
 
+		if type(lines_width) is not list:
+			temp = lines_width
+			lines_width = np.ones(len(lines)) * temp
+
 		for i, line in enumerate(lines):  # Iterate over the lines
-			line.set_linewidth(lines_width)  # Change the width
+			line.set_linewidth(lines_width[i])  # Change the width
 
 		if colors_bool:
 			for i, line in enumerate(lines):
@@ -109,12 +114,10 @@ def modify_plot(ax, fig=None, lines_width=2.5, label_size=20, tick_label_size=15
 	if legend:  # If exist a legend
 		ax.legend(fontsize=legend_size)  # Change the legend font size
 
-	ax.autoscale(tight=True)
-
 
 def zoomed_plot(fig, ax, pos, size, data, x_limit, y_limit, color='tab:blue', line_style='-', vertex=None):
 	inset_ax = fig.add_axes([pos[0], pos[1], size[0], size[1]])
-	inset_ax.plot(data[0], data[1], color=color, linestyle=line_style)
+	# inset_ax.plot(data[0], data[1], color=color, linestyle=line_style)
 
 	inset_ax.set_xlim(x_limit)
 	inset_ax.set_ylim(y_limit)
@@ -131,4 +134,10 @@ def zoomed_plot(fig, ax, pos, size, data, x_limit, y_limit, color='tab:blue', li
 def cycle_color(i):
 	color_list = ['007BE0', 'E00000', 'F99E00', '00B253', '4123AD', '563100', 'EA2B00', '00293D', '2CDD00', '00F9AE']
 
-	return '#' + color_list[i % len(color_list)]
+	if type(i) is not list:
+		return '#' + color_list[i % len(color_list)]
+	else:
+		temp = []
+		for index in i:
+			temp.append('#' + color_list[index % len(color_list)])
+		return temp
