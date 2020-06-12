@@ -1,6 +1,6 @@
 % Chapter Template
 
-\chapter{Theoretical Model} % Main chapter title
+\chapter{Theoretical Model for QD's} % Main chapter title
 
 \label{sec:Model} % Change X to a consecutive number; for referencing this chapter elsewhere, use \ref{ChapterX}
 
@@ -30,7 +30,7 @@ with the first term representing the array of quantum dots
 \begin{equation}
 	\hat{\mathcal{H}}_{\text{QD}}=\sum_{i=1}^N\varepsilon_{i}\hat{c}^\dagger_i\hat{c}_i+\sum_{i=1}^NU_i\hat{n}_{i\uparrow}\hat{n}_{i\downarrow}+\sum_{i\neq j}\frac{U_{ij}'}{2}\hat{n}_i\hat{n}_j-\sum_{i\neq j,\sigma}t_{N,ij}(\hat{c}^\dagger_{i\sigma}\hat{c}_{j\sigma}+ \text{H.c.})\; .
 \end{equation}
-The first term on the right hand side ot the above equation represents the on-site energy $\varepsilon_{i}$ of the dot $i$, the second and third terms are the intradot $U_i$ and interdot $U_{ij}'$ Coulomb interactions respectively, which can depend on the sites. Finally the fourth term corresponds to the spin-conserving tunneling rate $t_{N,ij}$ between dots $i$ and $j$. The annihilation (creation) fermionic operators on the site $i$ and with spin $\sigma=\uparrow,\downarrow$ are given by $\hat{c}^{i\sigma}$ ($\hat{c}_{i\sigma}^\dagger$), and $\hat{n}_{i\sigma}$ is the particle number operator. To keep the computations as simpler as possible it's common to neglect the interdot Coulomb interactions, so we set $U_{ij}=0$. In the above Hamiltonian we have only considered the ground state of each orbital, neglecting excited states. This is justified if the relevant energies are $\ll U_i$, what we will see in next section that is our case. In this work we will treat with linear arrays of QD in the approximation of first neighbour coupling, so tunneling will be only available for adjacent dots. The second term of Eq.~(\ref{eq:total_Hamiltonian}) represents the Zeeman splitting due to a magnetic filed perpendicular to the QD's plane
+The first term on the right hand side ot the above equation represents the on-site energy $\varepsilon_{i}$ of the dot $i$, the second and third terms are the intradot $U_i$ and interdot $U_{ij}'$ Coulomb interactions respectively, which can depend on the sites. Finally the fourth term corresponds to the spin-conserving tunneling rate $t_{N,ij}$ between dots $i$ and $j$. The annihilation (creation) fermionic operators on the site $i$ and with spin $\sigma=\uparrow,\downarrow$ are given by $\hat{c}^{i\sigma}$ ($\hat{c}_{i\sigma}^\dagger$), and $\hat{n}_{i\sigma}$ is the particle number operator. To keep the computations as simpler as possible it is common to neglect the interdot Coulomb interactions, so we set $U_{ij}'=0$. In the above Hamiltonian we have only considered the ground state of each orbital, neglecting excited states. This is justified if the relevant energies are $\ll U_i$, what we will see in next section that is our case. In this work we will treat with linear arrays of QD in the approximation of first neighbour coupling, so tunneling will be only available for adjacent dots. The second term of Eq.~(\ref{eq:total_Hamiltonian}) represents the Zeeman splitting due to a magnetic filed perpendicular to the QD's plane
 \begin{equation}
 	\hat{\mathcal{H}}_{\text{B}}=\frac{1}{2}g^*\mu_B B_\perp\sum_{i=1}^N(\hat{n}_{i\uparrow}-\hat{n}_{i\downarrow})\; ,
 \end{equation}
@@ -45,7 +45,7 @@ The characteristic length can be defined as
 \begin{equation}
 	\frac{1}{l^2}=\frac{m}{\hbar}\sqrt{\omega_0^2+\omega_c^2/4}\; ,
 \end{equation}
-where $\omega_0$ is the characteristic frequency of the harmonic confinement and $\omega_0\equiv \frac{eB}{mc}$ the cyclotron frequency due to the magnetic field applied. The overlap between the orbital is given by
+where $\omega_0$ is the characteristic frequency of the harmonic confinement and $\omega_0\equiv \frac{eB}{mc}$ the cyclotron frequency due to the magnetic field applied. The overlap between the orbitals is given by
 \begin{equation}
 	S\equiv \braket{R}{L}=\exp(-2\frac{d^2}{l^2})\; ,
 \end{equation}
@@ -56,11 +56,11 @@ what allow us to build a new basis
 	\ket{\overline{R}}\equiv \ket{R}-\frac{1}{2}S\ket{L}\; ,\\
 	\end{split}
 \end{equation}
-whose elements are orthogonal up to second order in the overlapping $\braket{\overline{R}}{\overline{L}}=\order{S^3}$. Looking at Eq.~(\ref{eq:SOC_Hamiltonain}) we observe that both SOC couple the spin with the orbital degree of freedom, so the tunneling of the particle must be accompanied by a flip in the spin. Computing the matrix elements $\bra{\overline{L}\uparrow}p_-p_+p_-\ket{\overline{R}\downarrow}$ and $\bra{\overline{L}\uparrow}p_-^3\ket{\overline{R}\downarrow}$ we obtain the result
+whose elements are orthogonal up to second order in the overlapping $\braket{\overline{R}}{\overline{L}}=\order{S^3}$. Looking at Eq.~(\ref{eq:SOC_Hamiltonain}) we observe that both SOC couple the spin with the orbital degree of freedom, so the tunneling of the particle must be accompanied by a flip in the spin. Now we define the states $\ket{i\uparrow}$ and $\ket{i\downarrow}$ in which the particle is located in the dot $i=L,R$ with spin up and down respectively. Computing the matrix elements $\bra{\overline{L}\uparrow}p_-p_+p_-\ket{\overline{R}\downarrow}$ and $\bra{\overline{L}\uparrow}p_-^3\ket{\overline{R}\downarrow}$ we obtain the result
 \begin{equation}
 	\bra{\overline{L}\uparrow}\hat{\mathcal{H}}_{\text{SO}}\ket{\overline{R}\downarrow}=-8i\beta\hbar^3\left(\frac{d}{l^4}-\frac{d^3}{l^6}+\frac{d}{16l_B^2}\right)\exp(-2\frac{d^2}{l^2})-8\hbar^3\alpha E_\perp \frac{d^3}{l^6}\exp(-2\frac{d^2}{l^2})\; ,
 \end{equation}
-where we have neglected terms of order higher than $\order{S^3}$ and defined the length $l_B\equiv \sqrt{\hbar/m\omega_c}$. The result corresponds to a complex number whose phase is given by the relative strength of the Rashba and Dresselhaus SOC, so we can write the spin-flip tunneling element ass
+where we have neglected terms of order higher than $\order{S^3}$ and defined the length $l_B\equiv \sqrt{\hbar/m\omega_c}$. The result corresponds to a complex number whose phase is given by the relative strength of the Rashba and Dresselhaus SOC, so we can write the spin-flip tunneling element as
 \begin{equation}
 	\bra{\overline{L}\uparrow}\hat{\mathcal{H}}_{\text{SO}}\ket{\overline{R}\downarrow}=t_Fe^{i\theta}\; .
 \end{equation}
@@ -71,11 +71,11 @@ It can be verify that the SOC does not couple two states with the particle in th
 In this work we will only study a close system, i.e. without coupling the QD's to a source and a drain contacts. One of the systems that we will study in this work is a linear TQD array, in Fig.~\ref{fig:TQD_Sketch} we have plotted the possible tunneling paths for a hole confined in the system. Here we can see that the coupling between second neighbours are forbidden in our model.
 \begin{figure}[!htbp]
 	\centering
-	\includegraphics[width=0.6\linewidth]{TQD_Sketch.eps}
-	\caption{Pictorial representation for the possible tunneling that a HH can experiment in a linear triple quantum dot array. The spin-conserving and spin-flip tunneling rates are denoted with $t_N$ and $t_F$ respectively.}
+	\includegraphics[width=0.5\linewidth]{TQD_Sketch.eps}
+	\caption{Pictorial representation for the possible tunneling that a HH can experiment in a linear triple quantum dot array. The spin-conserving and spin-flip tunneling rates are denoted with $t_N$ and $t_F$ respectively. In principle the rates for each dot can be tuned independently.}
 	\label{fig:TQD_Sketch}
 \end{figure}
 
-Due to the typical energies and times for holes in quantum dots the units that we will use during this work are $\mu$eV for energy and ns for time. In this units the reduced Plank constant has a value of $\hbar=0.6582 \; \mu$eV$\cdot$ns.
+Due to the typical energies and times for holes in quantum dots, the units that we will use during this work are $\mu$eV for energy and ns for time. In this units the reduced Plank constant has a value of $\hbar=0.6582 \; \mu$eV$\cdot$ns.
 
 

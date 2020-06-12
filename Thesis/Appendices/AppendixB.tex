@@ -1,6 +1,390 @@
 % Appendix Template
 
-\chapter{Numerical Methods} % Main appendix title
+\chapter{Computational Methods} % Main appendix title
 
 \label{app:Numerical_methods} % Change X to a consecutive letter; for referencing this appendix elsewhere, use \ref{AppendixX}
 
+In this appendix we will show some of the numerical methods used in this work. We also present some fragments of the code written to obtain the results given in Chapters \ref{sec:DQD} and \ref{sec:TQD}. Two different programming languages has been used, on one hand we have used Wolfram Mathematica 12.0 for the analytical computations like the obtention of the eigenvectors of a given Hamiltonian. This is necessary for finding the dark state shown in Chapter \ref{sec:TQD} and the obtention of the counteradiabatic driving Hamiltonian. Lastly this software was used to solve the system of ODE's. All the code is written with build-in functions, so the syntax is extremely simpler and is not worth to show here some examples.
+
+On the other hand, we have used Python 3.7 for the rest of the calculations, here is where the core of this work is located. All the code written tries to be the more general as possible, so we can reuse it on future works. In Chapter \ref{sec:DQD} we have used the FAQUAD protocol, for which we need to solve Eq.~(\ref{eq:c_tilde_deff}). The function to compute $\tilde{c}$ needs as input and array with the equally spaced values of the parameter $\lambda$, the eigenstates and eigenenergies and the index index for the initial adiabatic state. We can also specify the value for the reduced Plank constant $\hbar$ and a matrix denoting the derivative $\partial_\lambda \hat{\mathcal{H}}/\partial\lambda$. When computing the numerical derivative the precision is low if the step is not small enough. This is why we perform a filter for the final result mitigating this problem.
+\begin{mintedbox}{python}
+import numpy as np
+from scipy.integrate import romb
+from scipy.constants import h, e
+from scipy.signal import medfilt
+	
+hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9
+	
+def compute_adiabatic_parameter(x_vec, states, energies, initial_state, hbar=hbar_muev_ns, partial_Hamiltonian=None):
+	"""
+	Compute the factors need for the FAQUAD and the value of tilde{c}.
+	:param x_vec: (numpy.array) Vectors with the values of the parameters we are interested to change with a total of N values
+	:param states: (numpy.matrix) Matrix with the D instant eigenstates of the system. The dimension is [N x D x D]
+	:param energies: (numpy.matrix) Matrix with the D instant eigenenergies of the system. The dimension is [N x D]
+	:param initial_state: (int) Index for the initial state in which we begin the protocol
+	:param hbar: (float) Value for hbar
+		:param partial_Hamiltonian: (numpy.matrix) Matrix with the derivative of the Hamiltonian
+	:return: (list) List with the factors computed and the value of c_tilde.
+	"""
+	n, dim = np.shape(energies)
+
+	if partial_Hamiltonian is None:
+		method_1 = True
+	else:
+	method_1 = False
+	
+	if method_1:
+		derivatives = np.zeros([n, dim, dim], dtype=complex)
+		for i in range(0, dim): 
+			for j in range(0, dim):
+				derivatives[:, j, i] = np.gradient(states[:, j, i], x_vec)
+	
+	counter = 0
+	factors = np.zeros([n, dim - 1])
+	for i in range(0, dim):
+		if i != initial_state:
+			if method_1:
+				factors[:, counter] = np.abs(np.sum(np.conjugate(states[:, :, initial_state]) * derivatives[:, :, i], axis=1) / (energies[:, initial_state] - energies[:, i]))
+			else:
+				for k in range(0, n):
+					factors[k, counter] = np.abs(np.matmul(np.matmul(
+					np.conjugate(states[k, :, i]), partial_Hamiltonian[k, :, :]), states[k, :, initial_state]) / (energies[k, i] - energies[k, initial_state]) ** 2)
+			counter += 1
+	
+	if method_1:
+		for i in range(0, dim - 1):
+			factors[:, i] = medfilt(factors[:, i], 5)
+	
+	
+	c_tilde = hbar * np.sum(romb(factors, dx=np.abs(x_vec[0] - x_vec[1]), axis=0))
+	
+	return factors, c_tilde
+\end{mintedbox}
+
+One we have the value for $\tilde{c}$ we must numerically solve the ODE that give us the time dependence of the parameter $\lambda(t)$, Eq.~(\ref{eq:parameter_ODE_2}), Here we can reuse some factors obtained by the previous function. Here there can occur that due to numerical errors in the differential equation solver the boundary condition is not satisfied $\tilde{\lambda}(s=1)=\lambda(t=t_f)$, so we allow that the final value for the parameter is reached at $s\sim 1$. After that we force the correct boundary condition by interpolating the function.
+\begin{mintedbox}{python}
+from scipy.interpolate import interp1d
+from scipy.integrate import odeint
+	
+def compute_parameters_interpolation(x_vec, factors, c_tilde, nt=None, hbar=hbar_muev_ns):
+	"""
+	Function to solve the ODE which gives the result for the parameters in terms of the adimensional variable s=[0,1] for the FAQUAD protocol
+	:param x_vec: (numpy.array) Vector with the values of the independent variable
+	:param factors: (numpy.matrix) Matrix with the factors of the FAQUAD protocol
+	:param c_tilde: (float) Value for the rescaled adiabatic parameter
+	:param nt: Number of steps for the time variable
+	:param hbar: Value for h bar
+	:return: Vector of times and the parameter
+	"""
+	sig = np.sign(x_vec[1] - x_vec[0])
+
+	if nt is None:
+		nt = len(x_vec)
+
+	def factor_interpolation(x):
+		return interp1d(x_vec, 1 / np.sum(factors, axis=1), kind='quadratic', fill_value="extrapolate")(x)
+
+	def model(y, _):
+		return sig * c_tilde / hbar * factor_interpolation(y)
+
+	s_max = 1
+	s = np.linspace(0, s_max, nt, endpoint=True)
+
+	counter = 0
+	reached = False
+	while not reached:
+		x_sol = odeint(model, x_vec[0], s)[:, 0]
+		counter += 1
+		if np.any(sig * x_sol > sig * x_vec[-1]):
+			index_max = np.where(sig * x_sol > sig * x_vec[-1])[0][0]
+			reached = True
+		else:
+			s *= 1.1
+
+		if counter > 20:
+			print('The limit value has not been reached.')
+			return ()
+
+	s = np.linspace(0, 1, index_max + 1)
+	x_sol = x_sol[:index_max + 1]
+	x_sol = interp1d(s, xsol)
+
+	return s, x_sol
+\end{mintedbox}
+
+Other relevant value for the FAQUAD scheme is the frequency of oscillation for the fidelity, Eq.~(\ref{eq:FAQUAD_frecuencies}). Here we have to identify which is the time dependent parameter, compute the eigenenergies and obtain the integral for each frequency.
+\begin{mintedbox}{python}
+def compute_periods(x_sol, hamiltonian, parameters, hbar, index, state):
+	"""
+	Compute the characteristic period of the FAQUAD protocol
+	:param x_sol: (list, scipy.interpolated) List (if more than one) with all the interpolated functions representing the independent variables
+	:param hamiltonian: (function) Function pointing to the Hamiltonian in which are interested
+	:param parameters: (list) List with the parameters of the system. The elements of the parameters that run can be set to 0
+	:param hbar: (float) Value for the reduced Plank's constant
+	:param index: (list) List of the index in the list parameters of the variables in x_sol
+	:return: (float) Value for the period of the FAQUAD protocol.
+	"""
+	s = np.linspace(0, 1, 2 ** 15 + 1)
+	ns = len(s) 
+
+	x_sol_list = [] 
+	if type(x_sol) is list:
+		for i in range(0, len(x_sol)):
+		x_sol_list.append(x_sol(s))
+	else:
+		x_sol_list = [x_sol(s)]
+		index = [index]
+
+	for i in range(0, len(index)):
+		parameters[index[i]] = x_sol_list[i]
+
+	h_matrix = create_hypermatrix(parameters, hamiltonian)
+	energies = np.linalg.eigvalsh(h_matrix)
+
+	n = np.shape(energies)[1]
+
+	e_g = np.zeros([n - 1, ns])
+	counter = 0
+	for i in range(0, n):
+		if i != state:
+			e_g[counter, :] = np.abs(energies[:, state] - energies[:, i])
+			counter += 1
+
+	phi = romb(e_g, dx=(s[1] - s[0]), axis=1) / hbar 
+
+	t = 2 * np.pi / phi
+
+	return t
+\end{mintedbox}
+
+When working with pure dephasing we must compute the generalization of the diagonal Pauli matrices in dimension $d$. This can be easily achieved using the recursive Eq.~(\ref{eq:diagonal_matrices}).
+\begin{mintedbox}{python}
+def generalized_Pauli_Matrices(d, matrices_previous=None):
+	"""
+	Recursive computation of the generalized diagonal Pauli matrices for and arbitrary dimension.
+	:param d: (int) Dimension
+	:param matrices_previous: (list) Optional, list with the diagonal matrices for dimension d-1
+	:return: (list) List with numpy.matrix containing the total d-1 diagonal matrices
+	"""
+	if d == 2:
+		matrices = [np.array([[1, 0], [0, -1]])]
+	
+	else:
+		if matrices_previous is None:
+			matrices = generalized_Pauli_Matrices(d - 1)
+		else:
+			matrices = matrices_previous
+	
+	for i in range(len(matrices)):
+		temp = matrices[i]
+		temp = np.vstack((temp, np.zeros(d - 1)))
+		temp = np.hstack((temp, np.zeros((d, 1))))
+		matrices[i] = temp
+			
+	temp = np.eye(d)
+	temp[-1, -1] = (1 - d)
+	temp *= np.sqrt(2 / (d * (d - 1)))
+	matrices.append(temp)
+	
+	return matrices
+	
+\end{mintedbox}
+
+Once we have all the parameters defined we must solve the dynamic for the system. This will be done by a Runge-Kutta of order 4-5. By default the absolute and relative errors are set to $10^{-6}$ and $10^{-3}$ respectively. One way of checking the validity of the solution if thought the trace of the density matrix, which must be $\tr(\rho)=1$ at all times. The time step, and the relative and absolute errors are set such that $\abs{1-\tr(\rho)}\leq 10^{-15}$. The next code solves the Lindblad master equation~(\ref{eq:Lindblad_ME}). The code is formed by many different functions needed to being able to solve a general problem.
+\begin{mintedbox}{python}
+def check_callable(parameters):
+	"""
+	Function to check in a list of parameters which of them are interpolation functions or lambda function and which are just numbers
+	:param parameters: (list) List of parameters, some of them are interpolation functions and others are numbers
+	:return: (list) List with booleans representing if the corresponding parameters is an interpolation function or not
+	"""
+	temp = []
+
+	for i in parameters:
+		if callable(i):
+			temp.append(True)
+		else:
+			temp.append(False)
+
+	return temp
+	
+def extract_interpolation(x, parameters, which, normalization=1):
+	"""
+	Function to extract the values of the interpolated and not interpolated parameters
+	:param x: (float) Value representing the independent variable of the interpolation
+	:param parameters: (list) List of parameters, some of them are interpolation functions and others are numbers
+	:param which: (list) List of booleans representing which of the parameters are interpolation functions
+	:param normalization: (float) Normalization, if needed, for the interpolation
+	:return: (list) List with the values of the parameters at the given value of x
+	"""
+	temp = []
+
+	for i in range(0, len(parameters)):
+		if which[i]:
+			temp.append(parameters[i](x / normalization) * 1)
+		else:
+			temp.append(parameters[i])
+
+		return temp
+	
+def commutator(a, b, sign=-1):
+	"""
+	Function to compute the commutation or anticommutation of two matrices [a,b]=a.b (-/+) b.a 
+	"""
+	:param a: (numpy.matrix) Matrix a
+	:param b: (numpy.matrix) Matrix b
+	:param sign: (int +1 or -1) Sign denoting the commutation (-1)  or the anticommutation (+1)
+	:result: (numpy.matrix) Result of the operation
+	
+	return np.matmul(a, b) + sign * np.matmul(b, a)
+	
+def density_matrix_equation(t, y, dim, parameters, hamiltonian, which, normalization, hbar, decoherence_fun=None, parameters_decoherence=None):
+	"""
+	Function to give the numerical value for the EDO that represent the evolution of the density matrix at a given time
+	:param t: (float) Time at which we want to evaluate the EDO.
+	:param y:  (numpy.array) Array with the flattened density matrix
+	:param dim: (int) Dimension of the density matrix
+	:param parameters: (list) List of parameters to evaluate, some of them are interpolation functions
+	:param hamiltonian: (function) Function that compute the corresponding Hamiltonian in which we are interested
+	:param which: (list) List of booleans representing which of the parameters are interpolation functions
+	:param normalization: (float) Normalization (if needed) for the interpolation
+	:param hbar: (float) Value for the h bar constant
+	:return: (numpy.array) Solution of the EDO after flattening it
+	"""
+	rho = np.reshape(y, [dim, dim])
+
+	if decoherence_fun is not None:
+		decoherence = decoherence_fun(rho, t, normalization, hbar, *parameters_decoherence)
+	else:
+		decoherence = 0
+
+	parameters_interpolated = extract_interpolation(t, parameters, which, normalization=normalization)
+
+	ham_matrix = hamiltonian(*parameters_interpolated)
+	
+	drhodt = -1j * (np.matmul(ham_matrix, rho) - np.matmul(rho, ham_matrix)) / hbar + decoherence
+	
+	return drhodt.flatten()
+	
+def solve_system(time, density0, parameters, hamiltonian, full=False, prob=False, hbar=hbar_muev_ns, normalization=1, method='RK45', t_eval=False,
+atol=1e-6, rtol=1e-3, decoherence_fun=None, decoherence_param=None):
+	"""
+	Function to numerically solve the time evolution of a given density matrix.
+	:param time: (numpy.array) Array with the times at which we want to compute the evolution
+	:param density0: (numpy.matrix) Matrix with the density matrix at the initial time
+	:param parameters: (list) List of parameters for the Hamiltonian. Some can be interpolation functions
+	:param hamiltonian: (function) Function that compute the Hamiltonian we want
+	:param full: (Bool) If the user want the full result of the EDO solver
+	:param prob: (Bool) If the user want the probabilities of the states for the different times
+	:param hbar: (float) Value for the h bar constant
+	:param normalization: (float) Normalization for the argument of the interpolated functions
+	:param method: (str) Method to solve the system
+	:param t_eval: (Bool) If the user want solve_ivp automatically choose the time at which solve the EDO
+	:param atol: (float) Absolute maximum error allowed
+	:param rtol: (float) Relative maximum error allowed
+	:return: Solution given by the function scipy.integrate.solve_ivp. If we want to extract the solution for the density matrix at each value of t
+	we must make sol.y
+	"""
+	dim = np.shape(density0)[0]
+	which = check_callable(parameters)
+
+	if t_eval:
+		t_eval_array = None
+	else:
+		t_eval_array = time
+
+	sol = solve_ivp(density_matrix_equation, (time[0], time[-1]), density0.flatten(), t_eval=t_eval_array,args=[dim, parameters, hamiltonian, which, normalization, hbar, decoherence_fun, decoherence_param], method=method, atol=atol,	rtol=rtol)
+
+	if not full:
+		time = sol.t
+		sol = sol.y.reshape([dim, dim, len(time)])
+		if prob:
+			sol = [sol, np.abs(np.diagonal(sol)), time]
+
+	return sol
+\end{mintedbox}
+
+In order to study the robustness of the different protocols we must solve the same differential equations varying some parameter. Top make the best use of available resources, and with the aim of reducing the CPU, we opted to use parallel computation for solving each case independently. More specifically we have used asynchronous multiprocessing. here we present the code used for the obtention of the data shown in Fig.~\ref{fig:STA_TQD_Combined_SF} b).
+\begin{mintedbox}{python}
+import numpy as np
+from hamiltonians import hamiltonian_2QD_1HH_Lowest
+from general_functions import (solve_system_unpack, sort_solution, compute_adiabatic_parameter, compute_parameters_interpolation, compute_limits)
+import concurrent.futures
+import matplotlib.pyplot as plt
+from scipy.constants import h, e
+	
+workers = 8
+
+hbar_muev_ns = ((h / e) / (2 * np.pi)) * 10 ** 6 * 10 ** 9 
+g = 1.45
+muB = 57.883
+B = 0.015
+ET = g * muB * B
+u = 2000
+tau = 4
+l2 = tau * 0.4
+l1 = l2 / 100
+
+limit1 = 0.999
+limit2 = 0.999
+state_1 = 0
+state_2 = 1
+adiabatic_state = 1
+
+lim = 10 ** 4
+eps_vector_temp = np.linspace(-lim, lim, 2 ** 14) * ET - u
+parameters_temp = [eps_vector_temp, u, ET, tau, l1, l2]
+lim_T, lim_S = compute_limits(hamiltonian_2QD_1HH_Lowest, parameters_temp, limit1, limit2, state_1, state_2, adiabatic_state, eps_vector_temp, [tau],
+0, 3, filter_bool=False)
+
+n_eps = 2 ** 15 + 1
+eps_vector = np.linspace(lim_T[0], lim_S[0], n_eps)
+
+n_tf = 30
+tf_vec = np.linspace(0.1, 25, n_tf, endpoint=True)
+
+n_error = 5+1
+error_vector = np.linspace(-1, 1, n_error, endpoint=True) * 1e-2
+
+density0 = np.zeros([3, 3], dtype=complex)
+density0[0, 0] = 1
+
+partial_hamiltonian = np.zeros([n_eps, 3, 3], dtype=complex)
+partial_hamiltonian[:, 2, 2] = 1
+
+parameters = [eps_vector, u, ET, tau, l1, l2]
+energies, states = compute_eigensystem(parameters, hamiltonian_2QD_1HH_Lowest)
+factors, c_tilde = compute_adiabatic_parameter(eps_vector, states, energies, 1, hbar=hbar_muev_ns, partial_Hamiltonian=partial_hamiltonian)
+s, eps_sol = compute_parameters_interpolation(eps_vector, factors, c_tilde, method_1=False)
+
+n_t = 10 ** 3
+args = []
+for i in range(0, n_tf):
+	time = np.linspace(0, tf_vec[i], n_t)
+	for j in range(0, n_error):
+		temp = [i * n_error + j, time, density0, [eps_sol, u, ET, tau, l1, l2, error_vector[j]], hamiltonian_2QD_1HH_Lowest, {'normalization': tf_vec[i], 'hbar': hbar_muev_ns}]
+		args.append(temp)
+
+if __name__ == '__main__':
+	results_list = []
+
+	with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+		results = executor.map(solve_system_unpack, args, chunksize=4)
+		for result in results:
+			results_list.append(result)
+
+	results = sort_solution(results_list)
+
+	probabilities = []
+	for temp in results:
+		probabilities.append(temp[1])
+
+	fidelity = np.zeros([n_tf, n_error])
+	for i in range(0, n_tf):
+		for j in range(0, n_error):
+			index = i * n_error + j
+			temp = probabilities[index]
+			fidelity[i, j] = temp[-1, 1]
+\end{mintedbox}
+
+Here we have only shown some of the most relevant functions used, if you are interested in a closer look at the codes you can found them in the GitHub repository \href{https://github.com/Davtax/TFM}{https://github.com/Davtax/TFM}.

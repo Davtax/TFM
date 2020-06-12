@@ -74,6 +74,46 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 
 \usepackage{mathrsfs}
 
+\usepackage{tcolorbox}
+\tcbuselibrary{minted,breakable,xparse,skins}
+
+\definecolor{bg}{gray}{0.95}
+\DeclareTCBListing{mintedbox}{O{}m!O{}}{%
+	breakable=true,
+	listing engine=minted,
+	listing only,
+	minted language=#2,
+	minted style=default,
+	minted options={%
+		linenos,
+		gobble=0,
+		breaklines=true,
+		breakafter=,,
+		fontsize=\small,
+		numbersep=8pt,
+		#1},
+	boxsep=0pt,
+	left skip=0pt,
+	right skip=0pt,
+	left=25pt,
+	right=0pt,
+	top=3pt,
+	bottom=3pt,
+	arc=5pt,
+	leftrule=0pt,
+	rightrule=0pt,
+	bottomrule=2pt,
+	toprule=2pt,
+	colback=bg,
+	colframe=orange!70,
+	enhanced,
+	overlay={%
+		\begin{tcbclipinterior}
+			\fill[orange!20!white] (frame.south west) rectangle ([xshift=20pt]frame.north west);
+	\end{tcbclipinterior}},
+	#3}
+
+
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
 %----------------------------------------------------------------------------------------
@@ -165,6 +205,24 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 \end{center}
 \end{titlepage}
 
+%----------------------------------------------------------------------------------------
+%	QUOTATION PAGE
+%----------------------------------------------------------------------------------------
+
+\vspace*{0.2\textheight}
+
+\noindent\enquote{\itshape A piece of knowledge, unlike a piece of physical property, can be shared by large groups of people without making anybody poorer.}\bigbreak
+
+\hfill Aaron Swartz
+
+%----------------------------------------------------------------------------------------
+%	ACKNOWLEDGEMENTS
+%----------------------------------------------------------------------------------------
+
+\begin{acknowledgements}
+	\addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
+	This work was supported by the Fomento a la Investigación en Estudios de Máster UAM Scholarship.
+\end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
 %	ABSTRACT PAGE
@@ -175,14 +233,6 @@ consistentlayout, % Uncomment to change the layout of the declaration, abstract 
 
 \end{abstract}
 
-%----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
-
-\begin{acknowledgements}
-\addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-This work was supported by the Fomento a la Investigación UAM Scholarship.
-\end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
@@ -201,7 +251,8 @@ This work was supported by the Fomento a la Investigación UAM Scholarship.
 \begin{abbreviations}{ll} % Include a list of abbreviations (a table of two columns)
 
 \textbf{2DEG} & \textbf{2} \textbf{D}imensinal \textbf{E}lectron \textbf{G}as\\
-\textbf{DOSS}& \textbf{D}ouble \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
+\textbf{CD} &  \textbf{C}ounteradiabatic \textbf{D}riving\\
+\textbf{CTAP} & \textbf{C}oherent \textbf{T}ransfer by \textbf{A}diabatic \textbf{P}assage \\
 \textbf{DQD} & \textbf{D}ouble \textbf{Q}uantum \textbf{D}ot\\
 \textbf{FAQUAD} & \textbf{FA}ast \textbf{Qu}asi \textbf{A}diabatic \textbf{D}ynamics\\
 \textbf{HH} & \textbf{H}eavy \textbf{H}ole\\
@@ -210,10 +261,8 @@ This work was supported by the Fomento a la Investigación UAM Scholarship.
 \textbf{QD} & \textbf{Q}uantum \textbf{D}ot\\
 \textbf{QPC} & \textbf{Q}uantum \textbf{P}oint \textbf{C}ontact\\
 \textbf{SOC} & \textbf{S}pin-\textbf{O}rbit \textbf{C}oupling\\
-\textbf{SOSS}& \textbf{S}ingle \textbf{O}ccupation \textbf{S}inglet \textbf{S}tate\\
 \textbf{STA} & \textbf{S}hortcut \textbf{T}o \textbf{A}diabaticity\\
 \textbf{TQD} & \textbf{T}riple \textbf{Q}uantum \textbf{D}ot
-
 
 \end{abbreviations}
 
@@ -263,7 +312,7 @@ This work was supported by the Fomento a la Investigación UAM Scholarship.
 % Include the appendices of the thesis as separate files from the Appendices folder
 % Uncomment the lines as you write the Appendices
 
-\include{Appendices/AppendixA}
+%\include{Appendices/AppendixA}
 \include{Appendices/AppendixB}
 %\include{Appendices/AppendixC}
 
